@@ -7,7 +7,7 @@ Searches by configurable fields (hostname, serial, role, etc.) with OR logic.
 
 from netbox.plugins import PluginConfig
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 
 class AtlassianConfig(PluginConfig):
@@ -31,6 +31,7 @@ class AtlassianConfig(PluginConfig):
         "jira_url": "",  # e.g., "https://jira.example.com"
         "jira_username": "",
         "jira_password": "",  # or API token
+        "jira_token": "",  # Personal Access Token (PAT) - preferred for on-prem
         "jira_verify_ssl": True,
         # Confluence settings (on-prem)
         "confluence_url": "",  # e.g., "https://confluence.example.com"

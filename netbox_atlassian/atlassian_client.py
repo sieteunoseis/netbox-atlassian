@@ -44,6 +44,7 @@ class AtlassianClient:
         self.jira_url = self.config.get("jira_url", "").rstrip("/")
         self.jira_username = self.config.get("jira_username", "")
         self.jira_password = self.config.get("jira_password", "")
+        self.jira_token = self.config.get("jira_token", "")  # Personal Access Token
         self.jira_verify_ssl = self.config.get("jira_verify_ssl", True)
 
         # Confluence settings
@@ -98,13 +99,24 @@ class AtlassianClient:
         session = self._get_session()
 
         try:
-            response = session.get(
-                url,
-                auth=self._get_jira_auth(),
-                params=params,
-                verify=self.jira_verify_ssl,
-                timeout=self.timeout,
-            )
+            # Use PAT (Bearer token) if available, otherwise basic auth
+            if self.jira_token:
+                headers = {"Authorization": f"Bearer {self.jira_token}"}
+                response = session.get(
+                    url,
+                    headers=headers,
+                    params=params,
+                    verify=self.jira_verify_ssl,
+                    timeout=self.timeout,
+                )
+            else:
+                response = session.get(
+                    url,
+                    auth=self._get_jira_auth(),
+                    params=params,
+                    verify=self.jira_verify_ssl,
+                    timeout=self.timeout,
+                )
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
@@ -321,6 +333,9 @@ class AtlassianClient:
         """Test Jira connection."""
         if not self.jira_url:
             return False, "Jira URL not configured"
+
+        if not self.jira_token and not self.jira_username:
+            return False, "Jira credentials not configured (need token or username/password)"
 
         result = self._jira_request("myself")
         if result:
