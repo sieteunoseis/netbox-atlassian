@@ -174,6 +174,12 @@ flake8 netbox_atlassian/
 
 See [CHANGELOG.md](CHANGELOG.md) for release history.
 
+## Support
+
+If you find this plugin helpful, consider supporting development:
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?style=flat&logo=buy-me-a-coffee)](https://buymeacoffee.com/automatebldrs)
+
 ## License
 
 Apache 2.0
