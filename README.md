@@ -1,5 +1,10 @@
 # NetBox Atlassian Plugin
 
+![NetBox Version](https://img.shields.io/badge/NetBox-4.0+-blue)
+![Python Version](https://img.shields.io/badge/Python-3.10+-green)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![PyPI](https://img.shields.io/pypi/v/netbox-atlassian)](https://pypi.org/project/netbox-atlassian/)
+
 Display Jira issues and Confluence pages related to devices in NetBox.
 
 ## Features
@@ -10,6 +15,8 @@ Display Jira issues and Confluence pages related to devices in NetBox.
 - **OR Search Logic** - Finds content matching any configured field
 - **On-Premise Support** - Works with Jira Server/Data Center and Confluence Server/Data Center
 - **Cloud Ready** - Prepared for Atlassian Cloud (future release)
+- **Legacy SSL Support** - Works with older servers requiring legacy SSL renegotiation
+- **PAT Authentication** - Supports Personal Access Tokens for Confluence
 - **Caching** - Results cached to reduce API calls
 - **Project/Space Filtering** - Limit searches to specific Jira projects or Confluence spaces
 
@@ -47,8 +54,10 @@ PLUGINS_CONFIG = {
 
         # Confluence settings (on-prem)
         "confluence_url": "https://confluence.example.com",
-        "confluence_username": "api_user",
-        "confluence_password": "api_token_or_password",
+        "confluence_token": "personal-access-token",  # PAT (preferred)
+        # OR use username/password:
+        # "confluence_username": "api_user",
+        # "confluence_password": "api_password",
         "confluence_verify_ssl": True,
         "confluence_spaces": [],  # Empty = all spaces
 
@@ -69,6 +78,7 @@ PLUGINS_CONFIG = {
         "timeout": 30,
         "cache_timeout": 300,
         "device_types": [],  # Filter by manufacturer (empty = all)
+        "enable_legacy_ssl": False,  # Enable for older servers
     }
 }
 ```
@@ -124,6 +134,16 @@ The plugin adds these endpoints:
 3. For on-prem, ensure `verify_ssl` matches your certificate setup
 4. Check firewall rules allow outbound HTTPS
 
+### SSL Renegotiation Errors
+
+If you see "unsafe legacy renegotiation disabled" errors, enable legacy SSL:
+
+```python
+"enable_legacy_ssl": True,
+```
+
+This is required for some older Confluence/Jira servers.
+
 ### No Results
 
 1. Verify search fields are enabled in configuration
@@ -149,6 +169,10 @@ black netbox_atlassian/
 isort netbox_atlassian/
 flake8 netbox_atlassian/
 ```
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ## License
 
