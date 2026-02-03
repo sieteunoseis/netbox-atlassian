@@ -51,6 +51,7 @@ def get_search_terms(device) -> list[str]:
     Get search terms from device based on configured search fields.
 
     Returns list of non-empty values from enabled search fields.
+    For comma-separated values (like multiple serial numbers), splits into individual terms.
     """
     config = settings.PLUGINS_CONFIG.get("netbox_atlassian", {})
     search_fields = config.get("search_fields", [])
@@ -66,7 +67,15 @@ def get_search_terms(device) -> list[str]:
 
         value = get_device_attribute(device, attribute)
         if value and value.strip():
-            terms.append(value.strip())
+            # Split comma-separated values (e.g., multiple serial numbers)
+            if "," in value:
+                for part in value.split(","):
+                    part = part.strip()
+                    if part and part not in terms:
+                        terms.append(part)
+            else:
+                if value.strip() not in terms:
+                    terms.append(value.strip())
 
     return terms
 
