@@ -13,8 +13,8 @@ Display Jira issues and Confluence pages related to devices in NetBox.
 - **VM Tab** - Same functionality for Virtual Machines
 - **Configurable Search Fields** - Search by hostname, serial, asset tag, role, IP, etc.
 - **OR Search Logic** - Finds content matching any configured field
-- **On-Premise Support** - Works with Jira Server/Data Center and Confluence Server/Data Center
-- **Cloud Ready** - Prepared for Atlassian Cloud (future release)
+- **On-Premise Support** - Works with Jira Server/Data Center and Confluence Server/Data Center (tested)
+- **Cloud Ready** - Prepared for Atlassian Cloud (not yet tested)
 - **Legacy SSL Support** - Works with older servers requiring legacy SSL renegotiation
 - **PAT Authentication** - Supports Personal Access Tokens for Confluence
 - **Caching** - Results cached to reduce API calls

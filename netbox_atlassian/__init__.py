@@ -7,7 +7,7 @@ Searches by configurable fields (hostname, serial, role, etc.) with OR logic.
 
 from netbox.plugins import PluginConfig
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 
 class AtlassianConfig(PluginConfig):

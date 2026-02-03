@@ -9,7 +9,7 @@
             <i class="mdi mdi-magnify"></i>
             <strong>Searching for:</strong>
             {% for term in search_terms %}
-            <span class="badge bg-secondary text-white ms-1">{{ term }}</span>{% if not forloop.last %}<span class="text-muted ms-1">OR</span>{% endif %}
+            <span class="badge bg-info text-white ms-1">{{ term }}</span>{% if not forloop.last %}<span class="text-muted ms-1">OR</span>{% endif %}
             {% empty %}
             <span class="text-muted">No search terms available</span>
             {% endfor %}
