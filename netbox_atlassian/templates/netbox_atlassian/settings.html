@@ -1,0 +1,274 @@
+{% extends 'generic/object.html' %}
+{% load form_helpers %}
+
+{% block title %}Atlassian Plugin Settings{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="mdi mdi-cog"></i> Atlassian Plugin Configuration
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="mdi mdi-information"></i>
+                    Settings are read-only here. To configure the plugin, edit your NetBox
+                    <code>configuration.py</code> file.
+                </div>
+
+                <div class="row">
+                    <!-- Jira Settings -->
+                    <div class="col-md-6">
+                        <h5><i class="mdi mdi-jira text-primary"></i> Jira Configuration</h5>
+                        <table class="table table-sm">
+                            <tr>
+                                <th>URL:</th>
+                                <td>
+                                    {% if config.jira_url %}
+                                    <a href="{{ config.jira_url }}" target="_blank">{{ config.jira_url }}</a>
+                                    {% else %}
+                                    <span class="text-muted">Not configured</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Username:</th>
+                                <td>{{ config.jira_username|default:"Not configured" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Password:</th>
+                                <td>{% if config.jira_password %}********{% else %}<span class="text-muted">Not configured</span>{% endif %}</td>
+                            </tr>
+                            <tr>
+                                <th>Verify SSL:</th>
+                                <td>{{ config.jira_verify_ssl|yesno:"Yes,No" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Max Results:</th>
+                                <td>{{ config.jira_max_results|default:10 }}</td>
+                            </tr>
+                            <tr>
+                                <th>Projects Filter:</th>
+                                <td>{{ config.jira_projects|join:", "|default:"All projects" }}</td>
+                            </tr>
+                        </table>
+
+                        <button type="button" class="btn btn-sm btn-primary" id="test-jira-btn">
+                            <i class="mdi mdi-connection"></i> Test Jira Connection
+                        </button>
+                        <span id="jira-result" class="ms-2"></span>
+                    </div>
+
+                    <!-- Confluence Settings -->
+                    <div class="col-md-6">
+                        <h5><i class="mdi mdi-file-document text-info"></i> Confluence Configuration</h5>
+                        <table class="table table-sm">
+                            <tr>
+                                <th>URL:</th>
+                                <td>
+                                    {% if config.confluence_url %}
+                                    <a href="{{ config.confluence_url }}" target="_blank">{{ config.confluence_url }}</a>
+                                    {% else %}
+                                    <span class="text-muted">Not configured</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Username:</th>
+                                <td>{{ config.confluence_username|default:"Not configured" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Password:</th>
+                                <td>{% if config.confluence_password %}********{% else %}<span class="text-muted">Not configured</span>{% endif %}</td>
+                            </tr>
+                            <tr>
+                                <th>Verify SSL:</th>
+                                <td>{{ config.confluence_verify_ssl|yesno:"Yes,No" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Max Results:</th>
+                                <td>{{ config.confluence_max_results|default:10 }}</td>
+                            </tr>
+                            <tr>
+                                <th>Spaces Filter:</th>
+                                <td>{{ config.confluence_spaces|join:", "|default:"All spaces" }}</td>
+                            </tr>
+                        </table>
+
+                        <button type="button" class="btn btn-sm btn-info" id="test-confluence-btn">
+                            <i class="mdi mdi-connection"></i> Test Confluence Connection
+                        </button>
+                        <span id="confluence-result" class="ms-2"></span>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Search Configuration -->
+                <h5><i class="mdi mdi-magnify"></i> Search Configuration</h5>
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Field Name</th>
+                            <th>Device Attribute</th>
+                            <th>Enabled</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for field in config.search_fields %}
+                        <tr>
+                            <td>{{ field.name }}</td>
+                            <td><code>{{ field.attribute }}</code></td>
+                            <td>
+                                {% if field.enabled %}
+                                <span class="badge bg-success">Yes</span>
+                                {% else %}
+                                <span class="badge bg-secondary">No</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-muted">No search fields configured</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <!-- General Settings -->
+                <h5><i class="mdi mdi-tune"></i> General Settings</h5>
+                <table class="table table-sm">
+                    <tr>
+                        <th>Timeout:</th>
+                        <td>{{ config.timeout|default:30 }} seconds</td>
+                    </tr>
+                    <tr>
+                        <th>Cache Timeout:</th>
+                        <td>{{ config.cache_timeout|default:300 }} seconds</td>
+                    </tr>
+                    <tr>
+                        <th>Device Type Filter:</th>
+                        <td>{{ config.device_types|join:", "|default:"All device types" }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Configuration Example -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="mdi mdi-code-tags"></i> Configuration Example
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Add to your <code>configuration.py</code>:</p>
+                <pre><code>PLUGINS_CONFIG = {
+    "netbox_atlassian": {
+        # Jira settings (on-prem)
+        "jira_url": "https://jira.example.com",
+        "jira_username": "api_user",
+        "jira_password": "api_token_or_password",
+        "jira_verify_ssl": True,
+        "jira_projects": [],  # Empty = all projects, or ["PROJ1", "PROJ2"]
+
+        # Confluence settings (on-prem)
+        "confluence_url": "https://confluence.example.com",
+        "confluence_username": "api_user",
+        "confluence_password": "api_token_or_password",
+        "confluence_verify_ssl": True,
+        "confluence_spaces": [],  # Empty = all spaces, or ["SPACE1", "SPACE2"]
+
+        # Search configuration - searches use OR logic
+        "search_fields": [
+            {"name": "Hostname", "attribute": "name", "enabled": True},
+            {"name": "Serial", "attribute": "serial", "enabled": True},
+            {"name": "Asset Tag", "attribute": "asset_tag", "enabled": False},
+            {"name": "Role", "attribute": "role.name", "enabled": False},
+            {"name": "Primary IP", "attribute": "primary_ip4.address", "enabled": False},
+        ],
+
+        # Results limits
+        "jira_max_results": 10,
+        "confluence_max_results": 10,
+
+        # General
+        "timeout": 30,
+        "cache_timeout": 300,
+        "device_types": [],  # Empty = all devices, or ["cisco", "juniper"]
+    }
+}</code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('test-jira-btn').addEventListener('click', function() {
+    var btn = this;
+    var resultSpan = document.getElementById('jira-result');
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Testing...';
+    resultSpan.innerHTML = '';
+
+    fetch('{% url "plugins:netbox_atlassian:test_jira" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            resultSpan.innerHTML = '<span class="text-success"><i class="mdi mdi-check-circle"></i> ' + data.message + '</span>';
+        } else {
+            resultSpan.innerHTML = '<span class="text-danger"><i class="mdi mdi-alert-circle"></i> ' + data.error + '</span>';
+        }
+    })
+    .catch(error => {
+        resultSpan.innerHTML = '<span class="text-danger"><i class="mdi mdi-alert-circle"></i> Request failed</span>';
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="mdi mdi-connection"></i> Test Jira Connection';
+    });
+});
+
+document.getElementById('test-confluence-btn').addEventListener('click', function() {
+    var btn = this;
+    var resultSpan = document.getElementById('confluence-result');
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Testing...';
+    resultSpan.innerHTML = '';
+
+    fetch('{% url "plugins:netbox_atlassian:test_confluence" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            resultSpan.innerHTML = '<span class="text-success"><i class="mdi mdi-check-circle"></i> ' + data.message + '</span>';
+        } else {
+            resultSpan.innerHTML = '<span class="text-danger"><i class="mdi mdi-alert-circle"></i> ' + data.error + '</span>';
+        }
+    })
+    .catch(error => {
+        resultSpan.innerHTML = '<span class="text-danger"><i class="mdi mdi-alert-circle"></i> Request failed</span>';
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="mdi mdi-connection"></i> Test Confluence Connection';
+    });
+});
+</script>
+{% endblock %}

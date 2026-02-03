@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "netbox-atlassian"
+version = "0.1.0"
+description = "NetBox plugin to display Jira issues and Confluence pages related to devices"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.10"
+authors = [
+    {name = "sieteunoseis", email = "jeremy.worden@gmail.com"}
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: Django",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+keywords = ["netbox", "jira", "confluence", "atlassian", "plugin"]
+dependencies = [
+    "requests>=2.28.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/sieteunoseis/netbox-atlassian"
+Repository = "https://github.com/sieteunoseis/netbox-atlassian"
+Issues = "https://github.com/sieteunoseis/netbox-atlassian/issues"
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "flake8",
+    "isort",
+    "pytest",
+]
+
+[tool.setuptools.packages.find]
+include = ["netbox_atlassian*"]
+
+[tool.setuptools.package-data]
+netbox_atlassian = ["templates/**/*.html"]
+
+[tool.black]
+line-length = 120
+target-version = ['py310', 'py311', 'py312']
+
+[tool.isort]
+profile = "black"
+line_length = 120
