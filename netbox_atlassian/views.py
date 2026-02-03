@@ -10,8 +10,10 @@ import re
 from dcim.models import Device
 from django.conf import settings
 from django.contrib import messages
-from django.http import JsonResponse
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
+from django.template.loader import render_to_string
 from django.views import View
 from netbox.views import generic
 from utilities.views import ViewTab, register_model_view
@@ -117,7 +119,7 @@ def should_show_atlassian_tab(device) -> bool:
 
 @register_model_view(Device, name="atlassian", path="atlassian")
 class DeviceAtlassianView(generic.ObjectView):
-    """Display Jira issues and Confluence pages for a Device."""
+    """Display Jira issues and Confluence pages for a Device with async loading."""
 
     queryset = Device.objects.all()
     template_name = "netbox_atlassian/device_tab.html"
@@ -130,7 +132,26 @@ class DeviceAtlassianView(generic.ObjectView):
     )
 
     def get(self, request, pk):
-        """Handle GET request for the Atlassian tab."""
+        """Render initial tab with loading spinner - content loads via htmx."""
+        device = Device.objects.get(pk=pk)
+        return render(
+            request,
+            self.template_name,
+            {
+                "object": device,
+                "tab": self.tab,
+                "loading": True,
+            },
+        )
+
+
+class DeviceAtlassianContentView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    """HTMX endpoint that returns Atlassian content for async loading."""
+
+    permission_required = "dcim.view_device"
+
+    def get(self, request, pk):
+        """Fetch Atlassian data and return HTML content."""
         device = Device.objects.get(pk=pk)
 
         config = settings.PLUGINS_CONFIG.get("netbox_atlassian", {})
@@ -158,27 +179,28 @@ class DeviceAtlassianView(generic.ObjectView):
         jira_url = config.get("jira_url", "").rstrip("/")
         confluence_url = config.get("confluence_url", "").rstrip("/")
 
-        return render(
-            request,
-            self.template_name,
-            {
-                "object": device,
-                "tab": self.tab,
-                "search_terms": search_terms,
-                "enabled_fields": enabled_fields,
-                "jira_results": jira_results,
-                "confluence_results": confluence_results,
-                "jira_url": jira_url,
-                "confluence_url": confluence_url,
-                "jira_configured": bool(jira_url),
-                "confluence_configured": bool(confluence_url),
-            },
+        return HttpResponse(
+            render_to_string(
+                "netbox_atlassian/tab_content.html",
+                {
+                    "object": device,
+                    "search_terms": search_terms,
+                    "enabled_fields": enabled_fields,
+                    "jira_results": jira_results,
+                    "confluence_results": confluence_results,
+                    "jira_url": jira_url,
+                    "confluence_url": confluence_url,
+                    "jira_configured": bool(jira_url),
+                    "confluence_configured": bool(confluence_url),
+                },
+                request=request,
+            )
         )
 
 
 @register_model_view(VirtualMachine, name="atlassian", path="atlassian")
 class VirtualMachineAtlassianView(generic.ObjectView):
-    """Display Jira issues and Confluence pages for a VirtualMachine."""
+    """Display Jira issues and Confluence pages for a VirtualMachine with async loading."""
 
     queryset = VirtualMachine.objects.all()
     template_name = "netbox_atlassian/vm_tab.html"
@@ -191,7 +213,26 @@ class VirtualMachineAtlassianView(generic.ObjectView):
     )
 
     def get(self, request, pk):
-        """Handle GET request for the Atlassian tab."""
+        """Render initial tab with loading spinner - content loads via htmx."""
+        vm = VirtualMachine.objects.get(pk=pk)
+        return render(
+            request,
+            self.template_name,
+            {
+                "object": vm,
+                "tab": self.tab,
+                "loading": True,
+            },
+        )
+
+
+class VMAtlassianContentView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    """HTMX endpoint that returns Atlassian content for VM async loading."""
+
+    permission_required = "virtualization.view_virtualmachine"
+
+    def get(self, request, pk):
+        """Fetch Atlassian data and return HTML content."""
         vm = VirtualMachine.objects.get(pk=pk)
 
         config = settings.PLUGINS_CONFIG.get("netbox_atlassian", {})
@@ -205,7 +246,6 @@ class VirtualMachineAtlassianView(generic.ObjectView):
             search_terms.append(str(vm.primary_ip4.address.ip))
 
         # Get configured search fields for display
-        search_fields = config.get("search_fields", [])
         enabled_fields = [{"name": "Name", "attribute": "name", "enabled": True}]
         if vm.primary_ip4:
             enabled_fields.append({"name": "Primary IP", "attribute": "primary_ip4", "enabled": True})
@@ -225,21 +265,22 @@ class VirtualMachineAtlassianView(generic.ObjectView):
         jira_url = config.get("jira_url", "").rstrip("/")
         confluence_url = config.get("confluence_url", "").rstrip("/")
 
-        return render(
-            request,
-            self.template_name,
-            {
-                "object": vm,
-                "tab": self.tab,
-                "search_terms": search_terms,
-                "enabled_fields": enabled_fields,
-                "jira_results": jira_results,
-                "confluence_results": confluence_results,
-                "jira_url": jira_url,
-                "confluence_url": confluence_url,
-                "jira_configured": bool(jira_url),
-                "confluence_configured": bool(confluence_url),
-            },
+        return HttpResponse(
+            render_to_string(
+                "netbox_atlassian/tab_content.html",
+                {
+                    "object": vm,
+                    "search_terms": search_terms,
+                    "enabled_fields": enabled_fields,
+                    "jira_results": jira_results,
+                    "confluence_results": confluence_results,
+                    "jira_url": jira_url,
+                    "confluence_url": confluence_url,
+                    "jira_configured": bool(jira_url),
+                    "confluence_configured": bool(confluence_url),
+                },
+                request=request,
+            )
         )
 
 

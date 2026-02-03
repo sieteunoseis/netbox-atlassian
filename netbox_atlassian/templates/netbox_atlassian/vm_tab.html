@@ -2,177 +2,19 @@
 {% load helpers %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <!-- Search Terms Info -->
-        <div class="alert alert-info mb-3">
-            <i class="mdi mdi-magnify"></i>
-            <strong>Searching for:</strong>
-            {% for term in search_terms %}
-            <span class="badge bg-info text-white ms-1">{{ term }}</span>{% if not forloop.last %}<span class="text-muted ms-1">OR</span>{% endif %}
-            {% empty %}
-            <span class="text-muted">No search terms available</span>
-            {% endfor %}
-            <br>
-            <small class="text-muted">
-                Fields: {% for field in enabled_fields %}{{ field.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
-            </small>
-        </div>
-
-        <div class="row">
-            <!-- Jira Issues Column -->
-            <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0">
-                            <i class="mdi mdi-jira text-primary"></i> Jira Issues
-                            {% if jira_results.total > 0 %}
-                            <span class="badge bg-info text-white">{{ jira_results.total }} issue{{ jira_results.total|pluralize }}</span>
-                            {% endif %}
-                        </h5>
-                        {% if jira_url %}
-                        <a href="{{ jira_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                            <i class="mdi mdi-open-in-new"></i> Open Jira
-                        </a>
-                        {% endif %}
-                    </div>
-                    <div class="card-body">
-                        {% if not jira_configured %}
-                        <div class="alert alert-warning mb-0">
-                            <i class="mdi mdi-alert"></i> Jira not configured
-                        </div>
-                        {% elif jira_results.error %}
-                        <div class="alert alert-danger mb-0">
-                            <i class="mdi mdi-alert-circle"></i> {{ jira_results.error }}
-                        </div>
-                        {% elif jira_results.issues %}
-                        <div class="table-responsive">
-                            <table class="table table-sm table-hover mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Key</th>
-                                        <th>Summary</th>
-                                        <th>Status</th>
-                                        <th>Type</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for issue in jira_results.issues %}
-                                    <tr>
-                                        <td>
-                                            <a href="{{ issue.url }}" target="_blank" class="fw-bold">
-                                                {{ issue.key }}
-                                            </a>
-                                        </td>
-                                        <td>
-                                            <span title="{{ issue.summary }}">
-                                                {{ issue.summary|truncatechars:50 }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            {% if issue.status_category == 'done' %}
-                                            <span class="badge bg-success text-white">{{ issue.status }}</span>
-                                            {% elif issue.status_category == 'indeterminate' %}
-                                            <span class="badge bg-primary text-white">{{ issue.status }}</span>
-                                            {% else %}
-                                            <span class="badge bg-secondary text-white">{{ issue.status }}</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if issue.type_icon %}
-                                            <img src="{{ issue.type_icon }}" alt="{{ issue.type }}" width="16" height="16" class="me-1">
-                                            {% endif %}
-                                            {{ issue.type }}
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                        {% if jira_results.total > jira_results.issues|length %}
-                        <div class="text-muted small mt-2">
-                            Showing {{ jira_results.issues|length }} of {{ jira_results.total }} results
-                        </div>
-                        {% endif %}
-                        {% else %}
-                        <div class="text-muted text-center py-4">
-                            <i class="mdi mdi-information-outline fs-1"></i>
-                            <p class="mb-0">No Jira issues found</p>
-                        </div>
-                        {% endif %}
-
-                        {% if jira_results.cached %}
-                        <div class="text-muted small mt-2">
-                            <i class="mdi mdi-cached"></i> Results from cache
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
+{% if loading %}
+<div id="atlassian-content"
+     hx-get="{% url 'plugins:netbox_atlassian:vm_content' pk=object.pk %}"
+     hx-trigger="load"
+     hx-swap="innerHTML">
+    <div class="d-flex justify-content-center align-items-center py-5">
+        <div class="text-center">
+            <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Loading...</span>
             </div>
-
-            <!-- Confluence Pages Column -->
-            <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0">
-                            <i class="mdi mdi-file-document text-info"></i> Confluence Pages
-                            {% if confluence_results.total > 0 %}
-                            <span class="badge bg-info text-white">{{ confluence_results.total }} page{{ confluence_results.total|pluralize }}</span>
-                            {% endif %}
-                        </h5>
-                        {% if confluence_url %}
-                        <a href="{{ confluence_url }}" target="_blank" class="btn btn-sm btn-outline-info">
-                            <i class="mdi mdi-open-in-new"></i> Open Confluence
-                        </a>
-                        {% endif %}
-                    </div>
-                    <div class="card-body">
-                        {% if not confluence_configured %}
-                        <div class="alert alert-warning mb-0">
-                            <i class="mdi mdi-alert"></i> Confluence not configured
-                        </div>
-                        {% elif confluence_results.error %}
-                        <div class="alert alert-danger mb-0">
-                            <i class="mdi mdi-alert-circle"></i> {{ confluence_results.error }}
-                        </div>
-                        {% elif confluence_results.pages %}
-                        <div class="list-group list-group-flush">
-                            {% for page in confluence_results.pages %}
-                            <a href="{{ page.url }}" target="_blank" class="list-group-item list-group-item-action">
-                                <div class="d-flex w-100 justify-content-between">
-                                    <h6 class="mb-1">{{ page.title }}</h6>
-                                    <small class="text-muted">{{ page.space_key }}</small>
-                                </div>
-                                {% if page.breadcrumb %}
-                                <small class="text-muted">{{ page.breadcrumb }}</small>
-                                {% endif %}
-                                <small class="text-muted d-block">
-                                    Last modified by {{ page.last_modified_by }}
-                                </small>
-                            </a>
-                            {% endfor %}
-                        </div>
-                        {% if confluence_results.total > confluence_results.pages|length %}
-                        <div class="text-muted small mt-2">
-                            Showing {{ confluence_results.pages|length }} of {{ confluence_results.total }} results
-                        </div>
-                        {% endif %}
-                        {% else %}
-                        <div class="text-muted text-center py-4">
-                            <i class="mdi mdi-information-outline fs-1"></i>
-                            <p class="mb-0">No Confluence pages found</p>
-                        </div>
-                        {% endif %}
-
-                        {% if confluence_results.cached %}
-                        <div class="text-muted small mt-2">
-                            <i class="mdi mdi-cached"></i> Results from cache
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
+            <p class="text-muted mb-0">Loading Atlassian data...</p>
         </div>
     </div>
 </div>
+{% endif %}
 {% endblock %}
