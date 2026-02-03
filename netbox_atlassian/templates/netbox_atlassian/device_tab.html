@@ -27,7 +27,7 @@
                         <h5 class="card-title mb-0">
                             <i class="mdi mdi-jira text-primary"></i> Jira Issues
                             {% if jira_results.total > 0 %}
-                            <span class="badge bg-primary text-white">{{ jira_results.total }} issue{{ jira_results.total|pluralize }}</span>
+                            <span class="badge bg-info text-white">{{ jira_results.total }} issue{{ jira_results.total|pluralize }}</span>
                             {% endif %}
                         </h5>
                         {% if jira_url %}
@@ -71,11 +71,11 @@
                                         </td>
                                         <td>
                                             {% if issue.status_category == 'done' %}
-                                            <span class="badge bg-success">{{ issue.status }}</span>
+                                            <span class="badge bg-success text-white">{{ issue.status }}</span>
                                             {% elif issue.status_category == 'indeterminate' %}
-                                            <span class="badge bg-primary">{{ issue.status }}</span>
+                                            <span class="badge bg-primary text-white">{{ issue.status }}</span>
                                             {% else %}
-                                            <span class="badge bg-secondary">{{ issue.status }}</span>
+                                            <span class="badge bg-secondary text-white">{{ issue.status }}</span>
                                             {% endif %}
                                         </td>
                                         <td>
