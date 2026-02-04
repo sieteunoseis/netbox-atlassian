@@ -25,6 +25,7 @@ from .forms import AtlassianSettingsForm
 # Check if netbox_endpoints plugin is installed
 try:
     from netbox_endpoints.models import Endpoint
+
     ENDPOINTS_PLUGIN_INSTALLED = True
 except ImportError:
     ENDPOINTS_PLUGIN_INSTALLED = False
@@ -396,11 +397,14 @@ def get_endpoint_search_terms(endpoint) -> list[str]:
     Returns list of non-empty values from enabled search fields.
     """
     config = settings.PLUGINS_CONFIG.get("netbox_atlassian", {})
-    search_fields = config.get("endpoint_search_fields", [
-        {"name": "Name", "attribute": "name", "enabled": True},
-        {"name": "MAC Address", "attribute": "mac_address", "enabled": True},
-        {"name": "Serial", "attribute": "serial", "enabled": True},
-    ])
+    search_fields = config.get(
+        "endpoint_search_fields",
+        [
+            {"name": "Name", "attribute": "name", "enabled": True},
+            {"name": "MAC Address", "attribute": "mac_address", "enabled": True},
+            {"name": "Serial", "attribute": "serial", "enabled": True},
+        ],
+    )
 
     terms = []
     for field in search_fields:
@@ -458,11 +462,14 @@ if ENDPOINTS_PLUGIN_INSTALLED:
             search_terms = get_endpoint_search_terms(endpoint)
 
             # Get configured search fields for display
-            search_fields = config.get("endpoint_search_fields", [
-                {"name": "Name", "attribute": "name", "enabled": True},
-                {"name": "MAC Address", "attribute": "mac_address", "enabled": True},
-                {"name": "Serial", "attribute": "serial", "enabled": True},
-            ])
+            search_fields = config.get(
+                "endpoint_search_fields",
+                [
+                    {"name": "Name", "attribute": "name", "enabled": True},
+                    {"name": "MAC Address", "attribute": "mac_address", "enabled": True},
+                    {"name": "Serial", "attribute": "serial", "enabled": True},
+                ],
+            )
             enabled_fields = [f for f in search_fields if f.get("enabled", True)]
 
             # Search Jira and Confluence

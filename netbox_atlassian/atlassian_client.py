@@ -219,22 +219,26 @@ class AtlassianClient:
         issues = []
         for issue in result.get("issues", []):
             fields = issue.get("fields", {})
-            issues.append({
-                "key": issue.get("key"),
-                "summary": fields.get("summary", ""),
-                "status": fields.get("status", {}).get("name", ""),
-                "status_category": fields.get("status", {}).get("statusCategory", {}).get("key", ""),
-                "type": fields.get("issuetype", {}).get("name", ""),
-                "type_icon": fields.get("issuetype", {}).get("iconUrl", ""),
-                "priority": fields.get("priority", {}).get("name", "") if fields.get("priority") else "",
-                "priority_icon": fields.get("priority", {}).get("iconUrl", "") if fields.get("priority") else "",
-                "assignee": fields.get("assignee", {}).get("displayName", "") if fields.get("assignee") else "Unassigned",
-                "created": fields.get("created", ""),
-                "updated": fields.get("updated", ""),
-                "project": fields.get("project", {}).get("name", ""),
-                "project_key": fields.get("project", {}).get("key", ""),
-                "url": f"{self.jira_url}/browse/{issue.get('key')}",
-            })
+            issues.append(
+                {
+                    "key": issue.get("key"),
+                    "summary": fields.get("summary", ""),
+                    "status": fields.get("status", {}).get("name", ""),
+                    "status_category": fields.get("status", {}).get("statusCategory", {}).get("key", ""),
+                    "type": fields.get("issuetype", {}).get("name", ""),
+                    "type_icon": fields.get("issuetype", {}).get("iconUrl", ""),
+                    "priority": fields.get("priority", {}).get("name", "") if fields.get("priority") else "",
+                    "priority_icon": fields.get("priority", {}).get("iconUrl", "") if fields.get("priority") else "",
+                    "assignee": (
+                        fields.get("assignee", {}).get("displayName", "") if fields.get("assignee") else "Unassigned"
+                    ),
+                    "created": fields.get("created", ""),
+                    "updated": fields.get("updated", ""),
+                    "project": fields.get("project", {}).get("name", ""),
+                    "project_key": fields.get("project", {}).get("key", ""),
+                    "url": f"{self.jira_url}/browse/{issue.get('key')}",
+                }
+            )
 
         response = {
             "issues": issues,
@@ -308,16 +312,18 @@ class AtlassianClient:
             ancestors = page.get("ancestors", [])
             breadcrumb = " > ".join([a.get("title", "") for a in ancestors])
 
-            pages.append({
-                "id": page.get("id"),
-                "title": page.get("title", ""),
-                "space_key": space.get("key", ""),
-                "space_name": space.get("name", ""),
-                "last_modified": version.get("when", ""),
-                "last_modified_by": version.get("by", {}).get("displayName", ""),
-                "breadcrumb": breadcrumb,
-                "url": f"{self.confluence_url}{page.get('_links', {}).get('webui', '')}",
-            })
+            pages.append(
+                {
+                    "id": page.get("id"),
+                    "title": page.get("title", ""),
+                    "space_key": space.get("key", ""),
+                    "space_name": space.get("name", ""),
+                    "last_modified": version.get("when", ""),
+                    "last_modified_by": version.get("by", {}).get("displayName", ""),
+                    "breadcrumb": breadcrumb,
+                    "url": f"{self.confluence_url}{page.get('_links', {}).get('webui', '')}",
+                }
+            )
 
         response = {
             "pages": pages,

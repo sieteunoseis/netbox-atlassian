@@ -5,9 +5,9 @@ URL patterns for NetBox Atlassian Plugin
 from django.urls import path
 
 from .views import (
+    ENDPOINTS_PLUGIN_INSTALLED,
     AtlassianSettingsView,
     DeviceAtlassianContentView,
-    ENDPOINTS_PLUGIN_INSTALLED,
     TestConfluenceConnectionView,
     TestJiraConnectionView,
     VMAtlassianContentView,
