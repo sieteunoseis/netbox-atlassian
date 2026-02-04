@@ -5,9 +5,13 @@ Display Jira issues and Confluence pages related to devices in NetBox.
 Searches by configurable fields (hostname, serial, role, etc.) with OR logic.
 """
 
+import logging
+
 from netbox.plugins import PluginConfig
 
-__version__ = "0.2.2"
+__version__ = "0.2.3"
+
+logger = logging.getLogger(__name__)
 
 
 class AtlassianConfig(PluginConfig):
@@ -53,6 +57,14 @@ class AtlassianConfig(PluginConfig):
             {"name": "Role", "attribute": "role.name", "enabled": False},
             {"name": "Primary IP", "attribute": "primary_ip4.address", "enabled": False},
         ],
+        # Endpoint search fields (for netbox-endpoints plugin)
+        # Searches use OR logic - matches any field
+        "endpoint_search_fields": [
+            {"name": "Name", "attribute": "name", "enabled": True},
+            {"name": "MAC Address", "attribute": "mac_address", "enabled": True},
+            {"name": "Serial", "attribute": "serial", "enabled": True},
+            {"name": "Asset Tag", "attribute": "asset_tag", "enabled": False},
+        ],
         # Jira search settings
         "jira_max_results": 10,
         "jira_projects": [],  # Empty = search all projects
@@ -69,6 +81,61 @@ class AtlassianConfig(PluginConfig):
         # Empty list = show tab for all devices
         "device_types": [],  # e.g., ["cisco", "juniper"]
     }
+
+    def ready(self):
+        """Register endpoint view if netbox_endpoints is available."""
+        super().ready()
+        self._register_endpoint_views()
+
+    def _register_endpoint_views(self):
+        """Register Atlassian tab for Endpoints if plugin is installed."""
+        try:
+            from netbox_endpoints.models import Endpoint
+            from utilities.views import ViewTab, register_model_view
+            from netbox.views import generic
+            from django.shortcuts import render
+
+            from .views import should_show_atlassian_tab_endpoint
+
+            # Check if already registered
+            from utilities.views import registry
+            views_dict = registry.get('views', {})
+            endpoint_views = views_dict.get('netbox_endpoints', {}).get('endpoint', [])
+            if any(v.get('name') == 'atlassian' for v in endpoint_views):
+                return  # Already registered
+
+            @register_model_view(Endpoint, name="atlassian", path="atlassian")
+            class EndpointAtlassianView(generic.ObjectView):
+                """Display Jira issues and Confluence pages for an Endpoint."""
+
+                queryset = Endpoint.objects.all()
+                template_name = "netbox_atlassian/endpoint_tab.html"
+
+                tab = ViewTab(
+                    label="Atlassian",
+                    weight=9100,
+                    permission="netbox_endpoints.view_endpoint",
+                    hide_if_empty=False,
+                    visible=should_show_atlassian_tab_endpoint,
+                )
+
+                def get(self, request, pk):
+                    endpoint = Endpoint.objects.get(pk=pk)
+                    return render(
+                        request,
+                        self.template_name,
+                        {
+                            "object": endpoint,
+                            "tab": self.tab,
+                            "loading": True,
+                        },
+                    )
+
+            logger.info("Registered Atlassian tab for Endpoint model")
+        except ImportError:
+            logger.debug("netbox_endpoints not installed, skipping endpoint view registration")
+        except Exception as e:
+            logger.warning(f"Could not register endpoint views: {e}")
 
 
 config = AtlassianConfig

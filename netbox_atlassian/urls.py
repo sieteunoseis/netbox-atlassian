@@ -7,6 +7,7 @@ from django.urls import path
 from .views import (
     AtlassianSettingsView,
     DeviceAtlassianContentView,
+    ENDPOINTS_PLUGIN_INSTALLED,
     TestConfluenceConnectionView,
     TestJiraConnectionView,
     VMAtlassianContentView,
@@ -19,3 +20,11 @@ urlpatterns = [
     path("device/<int:pk>/content/", DeviceAtlassianContentView.as_view(), name="device_content"),
     path("vm/<int:pk>/content/", VMAtlassianContentView.as_view(), name="vm_content"),
 ]
+
+# Add endpoint URLs if netbox_endpoints is installed
+if ENDPOINTS_PLUGIN_INSTALLED:
+    from .views import EndpointAtlassianContentView
+
+    urlpatterns.append(
+        path("endpoint/<int:pk>/content/", EndpointAtlassianContentView.as_view(), name="endpoint_content"),
+    )

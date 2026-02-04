@@ -22,6 +22,13 @@ from virtualization.models import VirtualMachine
 from .atlassian_client import get_client
 from .forms import AtlassianSettingsForm
 
+# Check if netbox_endpoints plugin is installed
+try:
+    from netbox_endpoints.models import Endpoint
+    ENDPOINTS_PLUGIN_INSTALLED = True
+except ImportError:
+    ENDPOINTS_PLUGIN_INSTALLED = False
+
 
 def get_device_attribute(device, attribute_path: str):
     """
@@ -354,3 +361,139 @@ class TestConfluenceConnectionView(View):
         if success:
             return JsonResponse({"success": True, "message": message})
         return JsonResponse({"success": False, "error": message}, status=400)
+
+
+# Endpoint-specific functions for netbox_endpoints plugin
+def get_endpoint_attribute(endpoint, attribute_path: str):
+    """
+    Get an endpoint attribute by dot-separated path.
+
+    Args:
+        endpoint: Endpoint instance
+        attribute_path: Dot-separated attribute path (e.g., "name", "mac_address")
+
+    Returns:
+        Attribute value or None if not found
+    """
+    try:
+        value = endpoint
+        for part in attribute_path.split("."):
+            value = getattr(value, part, None)
+            if value is None:
+                return None
+        # Convert to string for IP addresses and MAC
+        if hasattr(value, "ip"):
+            return str(value.ip)
+        return str(value) if value else None
+    except Exception:
+        return None
+
+
+def get_endpoint_search_terms(endpoint) -> list[str]:
+    """
+    Get search terms from endpoint based on configured endpoint_search_fields.
+
+    Returns list of non-empty values from enabled search fields.
+    """
+    config = settings.PLUGINS_CONFIG.get("netbox_atlassian", {})
+    search_fields = config.get("endpoint_search_fields", [
+        {"name": "Name", "attribute": "name", "enabled": True},
+        {"name": "MAC Address", "attribute": "mac_address", "enabled": True},
+        {"name": "Serial", "attribute": "serial", "enabled": True},
+    ])
+
+    terms = []
+    for field in search_fields:
+        if not field.get("enabled", True):
+            continue
+
+        attribute = field.get("attribute", "")
+        if not attribute:
+            continue
+
+        value = get_endpoint_attribute(endpoint, attribute)
+        if value and value.strip():
+            # Split comma-separated values
+            if "," in value:
+                for part in value.split(","):
+                    part = part.strip()
+                    if part and part not in terms:
+                        terms.append(part)
+            else:
+                if value.strip() not in terms:
+                    terms.append(value.strip())
+
+    return terms
+
+
+def should_show_atlassian_tab_endpoint(endpoint) -> bool:
+    """
+    Determine if the Atlassian tab should be visible for this endpoint.
+
+    Shows tab if endpoint has at least one searchable field value.
+    """
+    if not ENDPOINTS_PLUGIN_INSTALLED:
+        return False
+
+    terms = get_endpoint_search_terms(endpoint)
+    return len(terms) > 0
+
+
+# Endpoint views - only available if netbox_endpoints is installed
+if ENDPOINTS_PLUGIN_INSTALLED:
+
+    class EndpointAtlassianContentView(LoginRequiredMixin, PermissionRequiredMixin, View):
+        """HTMX endpoint that returns Atlassian content for Endpoint async loading."""
+
+        permission_required = "netbox_endpoints.view_endpoint"
+
+        def get(self, request, pk):
+            """Fetch Atlassian data and return HTML content."""
+            endpoint = Endpoint.objects.get(pk=pk)
+
+            config = settings.PLUGINS_CONFIG.get("netbox_atlassian", {})
+            client = get_client()
+
+            # Get search terms from endpoint
+            search_terms = get_endpoint_search_terms(endpoint)
+
+            # Get configured search fields for display
+            search_fields = config.get("endpoint_search_fields", [
+                {"name": "Name", "attribute": "name", "enabled": True},
+                {"name": "MAC Address", "attribute": "mac_address", "enabled": True},
+                {"name": "Serial", "attribute": "serial", "enabled": True},
+            ])
+            enabled_fields = [f for f in search_fields if f.get("enabled", True)]
+
+            # Search Jira and Confluence
+            jira_results = {"issues": [], "total": 0, "error": None}
+            confluence_results = {"pages": [], "total": 0, "error": None}
+
+            if search_terms:
+                jira_max = config.get("jira_max_results", 10)
+                confluence_max = config.get("confluence_max_results", 10)
+
+                jira_results = client.search_jira(search_terms, max_results=jira_max)
+                confluence_results = client.search_confluence(search_terms, max_results=confluence_max)
+
+            # Get URLs for external links
+            jira_url = config.get("jira_url", "").rstrip("/")
+            confluence_url = config.get("confluence_url", "").rstrip("/")
+
+            return HttpResponse(
+                render_to_string(
+                    "netbox_atlassian/tab_content.html",
+                    {
+                        "object": endpoint,
+                        "search_terms": search_terms,
+                        "enabled_fields": enabled_fields,
+                        "jira_results": jira_results,
+                        "confluence_results": confluence_results,
+                        "jira_url": jira_url,
+                        "confluence_url": confluence_url,
+                        "jira_configured": bool(jira_url),
+                        "confluence_configured": bool(confluence_url),
+                    },
+                    request=request,
+                )
+            )
