@@ -9,7 +9,7 @@ import logging
 
 from netbox.plugins import PluginConfig
 
-__version__ = "0.2.3"
+__version__ = "0.2.4"
 
 logger = logging.getLogger(__name__)
 
@@ -89,20 +89,27 @@ class AtlassianConfig(PluginConfig):
 
     def _register_endpoint_views(self):
         """Register Atlassian tab for Endpoints if plugin is installed."""
+        import sys
+
+        # Quick check if netbox_endpoints is available
+        if "netbox_endpoints" not in sys.modules:
+            try:
+                import importlib.util
+
+                if importlib.util.find_spec("netbox_endpoints") is None:
+                    logger.debug("netbox_endpoints not installed, skipping endpoint view registration")
+                    return
+            except Exception:
+                logger.debug("netbox_endpoints not available, skipping endpoint view registration")
+                return
+
         try:
             from django.shortcuts import render
             from netbox.views import generic
             from netbox_endpoints.models import Endpoint
-
-            # Check if already registered
-            from utilities.views import ViewTab, register_model_view, registry
+            from utilities.views import ViewTab, register_model_view
 
             from .views import should_show_atlassian_tab_endpoint
-
-            views_dict = registry.get("views", {})
-            endpoint_views = views_dict.get("netbox_endpoints", {}).get("endpoint", [])
-            if any(v.get("name") == "atlassian" for v in endpoint_views):
-                return  # Already registered
 
             @register_model_view(Endpoint, name="atlassian", path="atlassian")
             class EndpointAtlassianView(generic.ObjectView):
