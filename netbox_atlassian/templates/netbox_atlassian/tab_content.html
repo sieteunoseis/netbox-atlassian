@@ -69,13 +69,9 @@
                                             <br>
                                             <small class="text-muted">
                                                 <i class="mdi mdi-tag-outline"></i> Matched:
-                                                {% if issue.matched_terms %}
                                                 {% for field in issue.matched_terms %}
                                                 <span class="badge bg-secondary text-white">{{ field }}</span>
                                                 {% endfor %}
-                                                {% else %}
-                                                <span class="badge bg-light text-dark">in content</span>
-                                                {% endif %}
                                             </small>
                                         </td>
                                         <td>
@@ -160,13 +156,9 @@
                                 </small>
                                 <small class="text-muted">
                                     <i class="mdi mdi-tag-outline"></i> Matched:
-                                    {% if page.matched_terms %}
                                     {% for field in page.matched_terms %}
                                     <span class="badge bg-secondary text-white">{{ field }}</span>
                                     {% endfor %}
-                                    {% else %}
-                                    <span class="badge bg-light text-dark">in content</span>
-                                    {% endif %}
                                 </small>
                             </a>
                             {% endfor %}

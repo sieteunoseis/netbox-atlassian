@@ -9,7 +9,7 @@ import logging
 
 from netbox.plugins import PluginConfig
 
-__version__ = "0.2.5"
+__version__ = "0.2.7"
 
 logger = logging.getLogger(__name__)
 
@@ -69,9 +69,23 @@ class AtlassianConfig(PluginConfig):
         "jira_max_results": 10,
         "jira_projects": [],  # Empty = search all projects
         "jira_issue_types": [],  # Empty = all types
+        # Search mode: "title_only", "strict", "full_text"
+        # - title_only: Only search/match in issue summary/key
+        # - strict: Search all content but only show results with verified title/summary match
+        # - full_text: Show all results including body-only matches
+        "jira_search_mode": "strict",
         # Confluence search settings
         "confluence_max_results": 10,
         "confluence_spaces": [],  # Empty = search all spaces
+        # Search mode: "title_only", "strict", "full_text"
+        # - title_only: Only search in page titles (CQL: title ~)
+        # - strict: Search all content but only show results with verified title/breadcrumb match
+        # - full_text: Show all results including body-only matches
+        "confluence_search_mode": "strict",
+        # Match mode: "exact" or "partial"
+        # - exact: Require whole word match (e.g., "ABC123" won't match "ABC1234")
+        # - partial: Allow substring match (e.g., "ABC" matches "ABC123")
+        "match_mode": "exact",
         # General settings
         "timeout": 30,
         "cache_timeout": 300,  # Cache results for 5 minutes

@@ -5,6 +5,7 @@ Supports both on-premise and cloud deployments.
 """
 
 import logging
+import re
 import ssl
 from typing import Optional
 
@@ -141,11 +142,31 @@ class AtlassianClient:
         # Combine all text fields into one searchable string (case-insensitive)
         combined_text = " ".join(str(f) for f in text_fields if f).lower()
 
+        # Get match mode from config (exact or partial)
+        match_mode = self.config.get("match_mode", "exact")
+
         for term in search_terms:
-            if term and term.lower() in combined_text:
-                field_name = terms_with_fields.get(term, term)
-                if field_name not in matched_fields:
-                    matched_fields.append(field_name)
+            if not term:
+                continue
+
+            term_lower = term.lower()
+
+            if match_mode == "exact":
+                # Use word boundary matching for exact terms
+                # Escape special regex characters in the term
+                escaped_term = re.escape(term_lower)
+                # Match whole word only (word boundaries or start/end of string)
+                pattern = rf"(?:^|[\s\-_,;:\.\/\(\)\[\]]){escaped_term}(?:$|[\s\-_,;:\.\/\(\)\[\]])"
+                if re.search(pattern, combined_text):
+                    field_name = terms_with_fields.get(term, term)
+                    if field_name not in matched_fields:
+                        matched_fields.append(field_name)
+            else:
+                # Partial/substring match (original behavior)
+                if term_lower in combined_text:
+                    field_name = terms_with_fields.get(term, term)
+                    if field_name not in matched_fields:
+                        matched_fields.append(field_name)
 
         return matched_fields
 
@@ -199,14 +220,21 @@ class AtlassianClient:
         if not self.jira_url or not search_terms:
             return {"issues": [], "total": 0, "error": None}
 
+        # Get search mode from config
+        search_mode = self.config.get("jira_search_mode", "strict")
+
         # Build JQL query with OR logic
-        # Search in summary, description, and comments
         text_queries = []
         for term in search_terms:
             if term:
                 # Escape special JQL characters
                 escaped = term.replace('"', '\\"')
-                text_queries.append(f'text ~ "{escaped}"')
+                if search_mode == "title_only":
+                    # Only search in issue summary
+                    text_queries.append(f'summary ~ "{escaped}"')
+                else:
+                    # Search in all content (summary, description, comments)
+                    text_queries.append(f'text ~ "{escaped}"')
 
         if not text_queries:
             return {"issues": [], "total": 0, "error": None}
@@ -254,6 +282,13 @@ class AtlassianClient:
             # Find which search field names matched this issue (check summary and key)
             matched_fields = self._find_matched_fields(search_terms, terms_with_fields, [summary, key])
 
+            # Filter based on search mode
+            if search_mode in ("title_only", "strict"):
+                # Only include results where we can verify the match in summary/key
+                if not matched_fields:
+                    continue
+            # For "full_text" mode, include all results
+
             issues.append(
                 {
                     "key": key,
@@ -278,7 +313,7 @@ class AtlassianClient:
 
         response = {
             "issues": issues,
-            "total": result.get("total", 0),
+            "total": len(issues),  # Use filtered count, not API total
             "error": None,
             "cached": False,
         }
@@ -303,13 +338,21 @@ class AtlassianClient:
         if not self.confluence_url or not search_terms:
             return {"pages": [], "total": 0, "error": None}
 
+        # Get search mode from config
+        search_mode = self.config.get("confluence_search_mode", "strict")
+
         # Build CQL query with OR logic
         text_queries = []
         for term in search_terms:
             if term:
                 # Escape special CQL characters
                 escaped = term.replace('"', '\\"')
-                text_queries.append(f'text ~ "{escaped}"')
+                if search_mode == "title_only":
+                    # Only search in page titles
+                    text_queries.append(f'title ~ "{escaped}"')
+                else:
+                    # Search in all content (text includes title, body, comments)
+                    text_queries.append(f'text ~ "{escaped}"')
 
         if not text_queries:
             return {"pages": [], "total": 0, "error": None}
@@ -355,6 +398,13 @@ class AtlassianClient:
             # Find which search field names matched this page (check title and breadcrumb)
             matched_fields = self._find_matched_fields(search_terms, terms_with_fields, [title, breadcrumb])
 
+            # Filter based on search mode
+            if search_mode in ("title_only", "strict"):
+                # Only include results where we can verify the match in title/breadcrumb
+                if not matched_fields:
+                    continue
+            # For "full_text" mode, include all results
+
             pages.append(
                 {
                     "id": page.get("id"),
@@ -371,7 +421,7 @@ class AtlassianClient:
 
         response = {
             "pages": pages,
-            "total": result.get("totalSize", result.get("size", 0)),
+            "total": len(pages),  # Use filtered count, not API total
             "error": None,
             "cached": False,
         }
