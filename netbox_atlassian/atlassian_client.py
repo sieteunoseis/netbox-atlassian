@@ -123,6 +123,32 @@ class AtlassianClient:
             logger.error(f"Jira API error: {e}")
             return None
 
+    def _find_matched_fields(
+        self, search_terms: list[str], terms_with_fields: dict[str, str], text_fields: list[str]
+    ) -> list[str]:
+        """
+        Find which search field names matched based on terms appearing in text fields.
+
+        Args:
+            search_terms: List of terms to check
+            terms_with_fields: Dict mapping term -> field_name (e.g., {"server01": "Hostname"})
+            text_fields: List of text values to search in
+
+        Returns:
+            List of matched field names (e.g., ["Hostname", "Serial"])
+        """
+        matched_fields = []
+        # Combine all text fields into one searchable string (case-insensitive)
+        combined_text = " ".join(str(f) for f in text_fields if f).lower()
+
+        for term in search_terms:
+            if term and term.lower() in combined_text:
+                field_name = terms_with_fields.get(term, term)
+                if field_name not in matched_fields:
+                    matched_fields.append(field_name)
+
+        return matched_fields
+
     def _confluence_request(self, endpoint: str, params: Optional[dict] = None) -> Optional[dict]:
         """Make a request to Confluence REST API."""
         if not self.confluence_url:
@@ -156,12 +182,15 @@ class AtlassianClient:
             logger.error(f"Confluence API error: {e}")
             return None
 
-    def search_jira(self, search_terms: list[str], max_results: int = 10) -> dict:
+    def search_jira(
+        self, search_terms: list[str], terms_with_fields: dict[str, str], max_results: int = 10
+    ) -> dict:
         """
         Search Jira for issues containing any of the search terms.
 
         Args:
             search_terms: List of terms to search (OR logic)
+            terms_with_fields: Dict mapping term -> field_name (e.g., {"server01": "Hostname"})
             max_results: Maximum number of results to return
 
         Returns:
@@ -219,10 +248,16 @@ class AtlassianClient:
         issues = []
         for issue in result.get("issues", []):
             fields = issue.get("fields", {})
+            summary = fields.get("summary", "")
+            key = issue.get("key", "")
+
+            # Find which search field names matched this issue (check summary and key)
+            matched_fields = self._find_matched_fields(search_terms, terms_with_fields, [summary, key])
+
             issues.append(
                 {
-                    "key": issue.get("key"),
-                    "summary": fields.get("summary", ""),
+                    "key": key,
+                    "summary": summary,
                     "status": fields.get("status", {}).get("name", ""),
                     "status_category": fields.get("status", {}).get("statusCategory", {}).get("key", ""),
                     "type": fields.get("issuetype", {}).get("name", ""),
@@ -236,7 +271,8 @@ class AtlassianClient:
                     "updated": fields.get("updated", ""),
                     "project": fields.get("project", {}).get("name", ""),
                     "project_key": fields.get("project", {}).get("key", ""),
-                    "url": f"{self.jira_url}/browse/{issue.get('key')}",
+                    "url": f"{self.jira_url}/browse/{key}",
+                    "matched_terms": matched_fields,
                 }
             )
 
@@ -250,12 +286,15 @@ class AtlassianClient:
         cache.set(cache_key, response, self.cache_timeout)
         return response
 
-    def search_confluence(self, search_terms: list[str], max_results: int = 10) -> dict:
+    def search_confluence(
+        self, search_terms: list[str], terms_with_fields: dict[str, str], max_results: int = 10
+    ) -> dict:
         """
         Search Confluence for pages containing any of the search terms.
 
         Args:
             search_terms: List of terms to search (OR logic)
+            terms_with_fields: Dict mapping term -> field_name (e.g., {"server01": "Hostname"})
             max_results: Maximum number of results to return
 
         Returns:
@@ -307,21 +346,26 @@ class AtlassianClient:
         for page in result.get("results", []):
             space = page.get("space", {})
             version = page.get("version", {})
+            title = page.get("title", "")
 
             # Build breadcrumb from ancestors
             ancestors = page.get("ancestors", [])
             breadcrumb = " > ".join([a.get("title", "") for a in ancestors])
 
+            # Find which search field names matched this page (check title and breadcrumb)
+            matched_fields = self._find_matched_fields(search_terms, terms_with_fields, [title, breadcrumb])
+
             pages.append(
                 {
                     "id": page.get("id"),
-                    "title": page.get("title", ""),
+                    "title": title,
                     "space_key": space.get("key", ""),
                     "space_name": space.get("name", ""),
                     "last_modified": version.get("when", ""),
                     "last_modified_by": version.get("by", {}).get("displayName", ""),
                     "breadcrumb": breadcrumb,
                     "url": f"{self.confluence_url}{page.get('_links', {}).get('webui', '')}",
+                    "matched_terms": matched_fields,
                 }
             )
 

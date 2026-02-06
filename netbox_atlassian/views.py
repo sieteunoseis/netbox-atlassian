@@ -63,15 +63,27 @@ def get_search_terms(device) -> list[str]:
     Returns list of non-empty values from enabled search fields.
     For comma-separated values (like multiple serial numbers), splits into individual terms.
     """
+    terms_with_fields = get_search_terms_with_fields(device)
+    return list(terms_with_fields.keys())
+
+
+def get_search_terms_with_fields(device) -> dict[str, str]:
+    """
+    Get search terms from device with their source field names.
+
+    Returns dict mapping term -> field_name (e.g., {"server01": "Hostname", "ABC123": "Serial"})
+    For comma-separated values, each part maps to the same field name.
+    """
     config = settings.PLUGINS_CONFIG.get("netbox_atlassian", {})
     search_fields = config.get("search_fields", [])
 
-    terms = []
+    terms = {}  # term -> field_name
     for field in search_fields:
         if not field.get("enabled", True):
             continue
 
         attribute = field.get("attribute", "")
+        field_name = field.get("name", attribute)
         if not attribute:
             continue
 
@@ -82,10 +94,10 @@ def get_search_terms(device) -> list[str]:
                 for part in value.split(","):
                     part = part.strip()
                     if part and part not in terms:
-                        terms.append(part)
+                        terms[part] = field_name
             else:
                 if value.strip() not in terms:
-                    terms.append(value.strip())
+                    terms[value.strip()] = field_name
 
     return terms
 
@@ -165,8 +177,9 @@ class DeviceAtlassianContentView(LoginRequiredMixin, PermissionRequiredMixin, Vi
         config = settings.PLUGINS_CONFIG.get("netbox_atlassian", {})
         client = get_client()
 
-        # Get search terms from device
-        search_terms = get_search_terms(device)
+        # Get search terms with their source field names
+        terms_with_fields = get_search_terms_with_fields(device)
+        search_terms = list(terms_with_fields.keys())
 
         # Get configured search fields for display
         search_fields = config.get("search_fields", [])
@@ -180,8 +193,8 @@ class DeviceAtlassianContentView(LoginRequiredMixin, PermissionRequiredMixin, Vi
             jira_max = config.get("jira_max_results", 10)
             confluence_max = config.get("confluence_max_results", 10)
 
-            jira_results = client.search_jira(search_terms, max_results=jira_max)
-            confluence_results = client.search_confluence(search_terms, max_results=confluence_max)
+            jira_results = client.search_jira(search_terms, terms_with_fields, max_results=jira_max)
+            confluence_results = client.search_confluence(search_terms, terms_with_fields, max_results=confluence_max)
 
         # Get URLs for external links
         jira_url = config.get("jira_url", "").rstrip("/")
@@ -246,12 +259,14 @@ class VMAtlassianContentView(LoginRequiredMixin, PermissionRequiredMixin, View):
         config = settings.PLUGINS_CONFIG.get("netbox_atlassian", {})
         client = get_client()
 
-        # For VMs, search by name and primary IP
-        search_terms = []
+        # For VMs, search by name and primary IP with field mapping
+        terms_with_fields = {}
         if vm.name:
-            search_terms.append(vm.name)
+            terms_with_fields[vm.name] = "Name"
         if vm.primary_ip4:
-            search_terms.append(str(vm.primary_ip4.address.ip))
+            terms_with_fields[str(vm.primary_ip4.address.ip)] = "Primary IP"
+
+        search_terms = list(terms_with_fields.keys())
 
         # Get configured search fields for display
         enabled_fields = [{"name": "Name", "attribute": "name", "enabled": True}]
@@ -266,8 +281,8 @@ class VMAtlassianContentView(LoginRequiredMixin, PermissionRequiredMixin, View):
             jira_max = config.get("jira_max_results", 10)
             confluence_max = config.get("confluence_max_results", 10)
 
-            jira_results = client.search_jira(search_terms, max_results=jira_max)
-            confluence_results = client.search_confluence(search_terms, max_results=confluence_max)
+            jira_results = client.search_jira(search_terms, terms_with_fields, max_results=jira_max)
+            confluence_results = client.search_confluence(search_terms, terms_with_fields, max_results=confluence_max)
 
         # Get URLs for external links
         jira_url = config.get("jira_url", "").rstrip("/")
@@ -396,6 +411,16 @@ def get_endpoint_search_terms(endpoint) -> list[str]:
 
     Returns list of non-empty values from enabled search fields.
     """
+    terms_with_fields = get_endpoint_search_terms_with_fields(endpoint)
+    return list(terms_with_fields.keys())
+
+
+def get_endpoint_search_terms_with_fields(endpoint) -> dict[str, str]:
+    """
+    Get search terms from endpoint with their source field names.
+
+    Returns dict mapping term -> field_name.
+    """
     config = settings.PLUGINS_CONFIG.get("netbox_atlassian", {})
     search_fields = config.get(
         "endpoint_search_fields",
@@ -406,12 +431,13 @@ def get_endpoint_search_terms(endpoint) -> list[str]:
         ],
     )
 
-    terms = []
+    terms = {}  # term -> field_name
     for field in search_fields:
         if not field.get("enabled", True):
             continue
 
         attribute = field.get("attribute", "")
+        field_name = field.get("name", attribute)
         if not attribute:
             continue
 
@@ -422,10 +448,10 @@ def get_endpoint_search_terms(endpoint) -> list[str]:
                 for part in value.split(","):
                     part = part.strip()
                     if part and part not in terms:
-                        terms.append(part)
+                        terms[part] = field_name
             else:
                 if value.strip() not in terms:
-                    terms.append(value.strip())
+                    terms[value.strip()] = field_name
 
     return terms
 
@@ -458,8 +484,9 @@ if ENDPOINTS_PLUGIN_INSTALLED:
             config = settings.PLUGINS_CONFIG.get("netbox_atlassian", {})
             client = get_client()
 
-            # Get search terms from endpoint
-            search_terms = get_endpoint_search_terms(endpoint)
+            # Get search terms with their source field names
+            terms_with_fields = get_endpoint_search_terms_with_fields(endpoint)
+            search_terms = list(terms_with_fields.keys())
 
             # Get configured search fields for display
             search_fields = config.get(
@@ -480,8 +507,8 @@ if ENDPOINTS_PLUGIN_INSTALLED:
                 jira_max = config.get("jira_max_results", 10)
                 confluence_max = config.get("confluence_max_results", 10)
 
-                jira_results = client.search_jira(search_terms, max_results=jira_max)
-                confluence_results = client.search_confluence(search_terms, max_results=confluence_max)
+                jira_results = client.search_jira(search_terms, terms_with_fields, max_results=jira_max)
+                confluence_results = client.search_confluence(search_terms, terms_with_fields, max_results=confluence_max)
 
             # Get URLs for external links
             jira_url = config.get("jira_url", "").rstrip("/")
