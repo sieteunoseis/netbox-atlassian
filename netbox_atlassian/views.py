@@ -146,7 +146,7 @@ class DeviceAtlassianView(generic.ObjectView):
 
     tab = ViewTab(
         label="Atlassian",
-        weight=9100,
+        weight=9000,
         permission="dcim.view_device",
         hide_if_empty=False,
     )
@@ -228,7 +228,7 @@ class VirtualMachineAtlassianView(generic.ObjectView):
 
     tab = ViewTab(
         label="Atlassian",
-        weight=9100,
+        weight=9000,
         permission="virtualization.view_virtualmachine",
         hide_if_empty=False,
     )

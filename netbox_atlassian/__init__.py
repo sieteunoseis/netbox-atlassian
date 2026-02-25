@@ -9,7 +9,7 @@ import logging
 
 from netbox.plugins import PluginConfig
 
-__version__ = "0.2.7"
+__version__ = "0.2.8"
 
 logger = logging.getLogger(__name__)
 
@@ -18,10 +18,10 @@ class AtlassianConfig(PluginConfig):
     """Plugin configuration for NetBox Atlassian integration."""
 
     name = "netbox_atlassian"
-    verbose_name = "Atlassian"
+    verbose_name = "NetBox Atlassian"
     description = "Display Jira issues and Confluence pages related to devices"
     version = __version__
-    author = "sieteunoseis"
+    author = "Jeremy Worden"
     author_email = "sieteunoseis@github.com"
     base_url = "atlassian"
     min_version = "4.0.0"
@@ -134,7 +134,7 @@ class AtlassianConfig(PluginConfig):
 
                 tab = ViewTab(
                     label="Atlassian",
-                    weight=9100,
+                    weight=9000,
                     permission="netbox_endpoints.view_endpoint",
                     hide_if_empty=False,
                     visible=should_show_atlassian_tab_endpoint,
