@@ -31,6 +31,8 @@ dependencies = [
 Homepage = "https://github.com/sieteunoseis/netbox-atlassian"
 Repository = "https://github.com/sieteunoseis/netbox-atlassian"
 Issues = "https://github.com/sieteunoseis/netbox-atlassian/issues"
+Documentation = "https://github.com/sieteunoseis/netbox-atlassian/wiki"
+Changelog = "https://github.com/sieteunoseis/netbox-atlassian/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = [

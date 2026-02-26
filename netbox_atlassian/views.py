@@ -508,7 +508,9 @@ if ENDPOINTS_PLUGIN_INSTALLED:
                 confluence_max = config.get("confluence_max_results", 10)
 
                 jira_results = client.search_jira(search_terms, terms_with_fields, max_results=jira_max)
-                confluence_results = client.search_confluence(search_terms, terms_with_fields, max_results=confluence_max)
+                confluence_results = client.search_confluence(
+                    search_terms, terms_with_fields, max_results=confluence_max
+                )
 
             # Get URLs for external links
             jira_url = config.get("jira_url", "").rstrip("/")

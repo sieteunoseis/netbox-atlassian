@@ -203,9 +203,7 @@ class AtlassianClient:
             logger.error(f"Confluence API error: {e}")
             return None
 
-    def search_jira(
-        self, search_terms: list[str], terms_with_fields: dict[str, str], max_results: int = 10
-    ) -> dict:
+    def search_jira(self, search_terms: list[str], terms_with_fields: dict[str, str], max_results: int = 10) -> dict:
         """
         Search Jira for issues containing any of the search terms.
 
