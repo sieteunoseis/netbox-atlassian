@@ -15,6 +15,15 @@
             <small class="text-muted">
                 Fields: {% for field in enabled_fields %}{{ field.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
             </small>
+            {% if tag_slugs %}
+            <br>
+            <small class="text-muted">
+                <i class="mdi mdi-tag-multiple"></i> Tag labels:
+                {% for slug in tag_slugs %}
+                <span class="badge bg-success text-white">{{ slug }}</span>
+                {% endfor %}
+            </small>
+            {% endif %}
         </div>
 
         <div class="row">

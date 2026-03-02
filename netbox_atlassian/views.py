@@ -102,6 +102,24 @@ def get_search_terms_with_fields(device) -> dict[str, str]:
     return terms
 
 
+def get_tag_slugs(obj) -> list[str]:
+    """
+    Get tag slugs from a device, VM, or endpoint for label-based search.
+
+    Excludes generic tags (environment, role) configured in tag_search_exclude.
+    """
+    config = settings.PLUGINS_CONFIG.get("netbox_atlassian", {})
+    if not config.get("search_by_tags", True):
+        return []
+
+    exclude = set(config.get("tag_search_exclude", []))
+
+    try:
+        return [tag.slug for tag in obj.tags.all() if tag.slug not in exclude]
+    except Exception:
+        return []
+
+
 def should_show_atlassian_tab(device) -> bool:
     """
     Determine if the Atlassian tab should be visible for this device.
@@ -181,6 +199,9 @@ class DeviceAtlassianContentView(LoginRequiredMixin, PermissionRequiredMixin, Vi
         terms_with_fields = get_search_terms_with_fields(device)
         search_terms = list(terms_with_fields.keys())
 
+        # Get tag slugs for label-based search
+        tag_slugs = get_tag_slugs(device)
+
         # Get configured search fields for display
         search_fields = config.get("search_fields", [])
         enabled_fields = [f for f in search_fields if f.get("enabled", True)]
@@ -189,12 +210,12 @@ class DeviceAtlassianContentView(LoginRequiredMixin, PermissionRequiredMixin, Vi
         jira_results = {"issues": [], "total": 0, "error": None}
         confluence_results = {"pages": [], "total": 0, "error": None}
 
-        if search_terms:
+        if search_terms or tag_slugs:
             jira_max = config.get("jira_max_results", 10)
             confluence_max = config.get("confluence_max_results", 10)
 
-            jira_results = client.search_jira(search_terms, terms_with_fields, max_results=jira_max)
-            confluence_results = client.search_confluence(search_terms, terms_with_fields, max_results=confluence_max)
+            jira_results = client.search_jira(search_terms, terms_with_fields, max_results=jira_max, tag_slugs=tag_slugs)
+            confluence_results = client.search_confluence(search_terms, terms_with_fields, max_results=confluence_max, tag_slugs=tag_slugs)
 
         # Get URLs for external links
         jira_url = config.get("jira_url", "").rstrip("/")
@@ -206,6 +227,7 @@ class DeviceAtlassianContentView(LoginRequiredMixin, PermissionRequiredMixin, Vi
                 {
                     "object": device,
                     "search_terms": search_terms,
+                    "tag_slugs": tag_slugs,
                     "enabled_fields": enabled_fields,
                     "jira_results": jira_results,
                     "confluence_results": confluence_results,
@@ -268,6 +290,9 @@ class VMAtlassianContentView(LoginRequiredMixin, PermissionRequiredMixin, View):
 
         search_terms = list(terms_with_fields.keys())
 
+        # Get tag slugs for label-based search
+        tag_slugs = get_tag_slugs(vm)
+
         # Get configured search fields for display
         enabled_fields = [{"name": "Name", "attribute": "name", "enabled": True}]
         if vm.primary_ip4:
@@ -277,12 +302,12 @@ class VMAtlassianContentView(LoginRequiredMixin, PermissionRequiredMixin, View):
         jira_results = {"issues": [], "total": 0, "error": None}
         confluence_results = {"pages": [], "total": 0, "error": None}
 
-        if search_terms:
+        if search_terms or tag_slugs:
             jira_max = config.get("jira_max_results", 10)
             confluence_max = config.get("confluence_max_results", 10)
 
-            jira_results = client.search_jira(search_terms, terms_with_fields, max_results=jira_max)
-            confluence_results = client.search_confluence(search_terms, terms_with_fields, max_results=confluence_max)
+            jira_results = client.search_jira(search_terms, terms_with_fields, max_results=jira_max, tag_slugs=tag_slugs)
+            confluence_results = client.search_confluence(search_terms, terms_with_fields, max_results=confluence_max, tag_slugs=tag_slugs)
 
         # Get URLs for external links
         jira_url = config.get("jira_url", "").rstrip("/")
@@ -294,6 +319,7 @@ class VMAtlassianContentView(LoginRequiredMixin, PermissionRequiredMixin, View):
                 {
                     "object": vm,
                     "search_terms": search_terms,
+                    "tag_slugs": tag_slugs,
                     "enabled_fields": enabled_fields,
                     "jira_results": jira_results,
                     "confluence_results": confluence_results,
@@ -488,6 +514,9 @@ if ENDPOINTS_PLUGIN_INSTALLED:
             terms_with_fields = get_endpoint_search_terms_with_fields(endpoint)
             search_terms = list(terms_with_fields.keys())
 
+            # Get tag slugs for label-based search
+            tag_slugs = get_tag_slugs(endpoint)
+
             # Get configured search fields for display
             search_fields = config.get(
                 "endpoint_search_fields",
@@ -503,13 +532,13 @@ if ENDPOINTS_PLUGIN_INSTALLED:
             jira_results = {"issues": [], "total": 0, "error": None}
             confluence_results = {"pages": [], "total": 0, "error": None}
 
-            if search_terms:
+            if search_terms or tag_slugs:
                 jira_max = config.get("jira_max_results", 10)
                 confluence_max = config.get("confluence_max_results", 10)
 
-                jira_results = client.search_jira(search_terms, terms_with_fields, max_results=jira_max)
+                jira_results = client.search_jira(search_terms, terms_with_fields, max_results=jira_max, tag_slugs=tag_slugs)
                 confluence_results = client.search_confluence(
-                    search_terms, terms_with_fields, max_results=confluence_max
+                    search_terms, terms_with_fields, max_results=confluence_max, tag_slugs=tag_slugs
                 )
 
             # Get URLs for external links
@@ -522,6 +551,7 @@ if ENDPOINTS_PLUGIN_INSTALLED:
                     {
                         "object": endpoint,
                         "search_terms": search_terms,
+                        "tag_slugs": tag_slugs,
                         "enabled_fields": enabled_fields,
                         "jira_results": jira_results,
                         "confluence_results": confluence_results,

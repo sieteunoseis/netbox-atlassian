@@ -9,7 +9,7 @@ import logging
 
 from netbox.plugins import PluginConfig
 
-__version__ = "0.2.8"
+__version__ = "0.3.0"
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +95,18 @@ class AtlassianConfig(PluginConfig):
         # Device type filtering (like catalyst-center)
         # Empty list = show tab for all devices
         "device_types": [],  # e.g., ["cisco", "juniper"]
+        # Tag-based label search
+        # Search Jira/Confluence by device tag labels in addition to text search
+        "search_by_tags": True,
+        # Prefix for Jira labels (enterprise Jira may require a prefix)
+        "jira_tag_label_prefix": "tuce_",
+        # Prefix for Confluence labels (usually no prefix needed)
+        "confluence_tag_label_prefix": "",
+        # Tags to exclude from label search (generic tags that return too many results)
+        "tag_search_exclude": [
+            "production", "lab", "web", "sql", "publisher", "subscriber",
+            "side-a", "side-b", "vitalqip-sync",
+        ],
     }
 
     def ready(self):

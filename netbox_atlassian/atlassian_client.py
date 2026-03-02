@@ -170,6 +170,28 @@ class AtlassianClient:
 
         return matched_fields
 
+    def _find_matched_tags(
+        self, tag_slugs: list[str], result_labels: list[str], prefix: str = ""
+    ) -> list[str]:
+        """
+        Find which tag slugs matched based on result labels.
+
+        Args:
+            tag_slugs: List of tag slugs to check
+            result_labels: List of labels from the Jira/Confluence result
+            prefix: Label prefix (e.g., "tuce_" for Jira)
+
+        Returns:
+            List of matched tag descriptions (e.g., ["Tag: cucm", "Tag: voice-callcontrol"])
+        """
+        matched = []
+        result_labels_lower = {l.lower() for l in result_labels}
+        for slug in tag_slugs:
+            expected_label = f"{prefix}{slug}".lower()
+            if expected_label in result_labels_lower:
+                matched.append(f"Tag: {slug}")
+        return matched
+
     def _confluence_request(self, endpoint: str, params: Optional[dict] = None) -> Optional[dict]:
         """Make a request to Confluence REST API."""
         if not self.confluence_url:
@@ -203,7 +225,7 @@ class AtlassianClient:
             logger.error(f"Confluence API error: {e}")
             return None
 
-    def search_jira(self, search_terms: list[str], terms_with_fields: dict[str, str], max_results: int = 10) -> dict:
+    def search_jira(self, search_terms: list[str], terms_with_fields: dict[str, str], max_results: int = 10, tag_slugs: list[str] = None) -> dict:
         """
         Search Jira for issues containing any of the search terms.
 
@@ -215,7 +237,7 @@ class AtlassianClient:
         Returns:
             dict with 'issues' list and 'total' count
         """
-        if not self.jira_url or not search_terms:
+        if not self.jira_url or (not search_terms and not tag_slugs):
             return {"issues": [], "total": 0, "error": None}
 
         # Get search mode from config
@@ -234,10 +256,18 @@ class AtlassianClient:
                     # Search in all content (summary, description, comments)
                     text_queries.append(f'text ~ "{escaped}"')
 
-        if not text_queries:
+        # Build label query for tags
+        label_queries = []
+        jira_prefix = self.config.get("jira_tag_label_prefix", "tuce_")
+        if tag_slugs:
+            prefixed = [f"{jira_prefix}{s}" for s in tag_slugs]
+            label_list = ", ".join([f'"{l}"' for l in prefixed])
+            label_queries.append(f"labels in ({label_list})")
+
+        if not text_queries and not label_queries:
             return {"issues": [], "total": 0, "error": None}
 
-        jql = " OR ".join(text_queries)
+        jql = " OR ".join(text_queries + label_queries)
 
         # Add project filter if configured
         projects = self.config.get("jira_projects", [])
@@ -263,7 +293,7 @@ class AtlassianClient:
         params = {
             "jql": jql,
             "maxResults": max_results,
-            "fields": "summary,status,issuetype,priority,assignee,created,updated,project",
+            "fields": "summary,status,issuetype,priority,assignee,created,updated,project,labels",
         }
 
         result = self._jira_request("search", params)
@@ -280,9 +310,15 @@ class AtlassianClient:
             # Find which search field names matched this issue (check summary and key)
             matched_fields = self._find_matched_fields(search_terms, terms_with_fields, [summary, key])
 
+            # Check tag label matches
+            if tag_slugs:
+                issue_labels = fields.get("labels", [])
+                tag_matches = self._find_matched_tags(tag_slugs, issue_labels, jira_prefix)
+                matched_fields.extend(tag_matches)
+
             # Filter based on search mode
             if search_mode in ("title_only", "strict"):
-                # Only include results where we can verify the match in summary/key
+                # Only include results where we can verify the match in summary/key or labels
                 if not matched_fields:
                     continue
             # For "full_text" mode, include all results
@@ -320,7 +356,7 @@ class AtlassianClient:
         return response
 
     def search_confluence(
-        self, search_terms: list[str], terms_with_fields: dict[str, str], max_results: int = 10
+        self, search_terms: list[str], terms_with_fields: dict[str, str], max_results: int = 10, tag_slugs: list[str] = None
     ) -> dict:
         """
         Search Confluence for pages containing any of the search terms.
@@ -333,7 +369,7 @@ class AtlassianClient:
         Returns:
             dict with 'pages' list and 'total' count
         """
-        if not self.confluence_url or not search_terms:
+        if not self.confluence_url or (not search_terms and not tag_slugs):
             return {"pages": [], "total": 0, "error": None}
 
         # Get search mode from config
@@ -352,10 +388,18 @@ class AtlassianClient:
                     # Search in all content (text includes title, body, comments)
                     text_queries.append(f'text ~ "{escaped}"')
 
-        if not text_queries:
+        # Build label query for tags
+        label_queries = []
+        confluence_prefix = self.config.get("confluence_tag_label_prefix", "")
+        if tag_slugs:
+            prefixed = [f"{confluence_prefix}{s}" for s in tag_slugs]
+            label_list = ", ".join([f'"{l}"' for l in prefixed])
+            label_queries.append(f"label in ({label_list})")
+
+        if not text_queries and not label_queries:
             return {"pages": [], "total": 0, "error": None}
 
-        cql = " OR ".join(text_queries)
+        cql = " OR ".join(text_queries + label_queries)
 
         # Filter to pages only (not attachments, comments, etc.)
         cql = f"({cql}) AND type = page"
@@ -375,7 +419,7 @@ class AtlassianClient:
         params = {
             "cql": cql,
             "limit": max_results,
-            "expand": "space,version,ancestors",
+            "expand": "space,version,ancestors,metadata.labels",
         }
 
         result = self._confluence_request("content/search", params)
@@ -396,9 +440,18 @@ class AtlassianClient:
             # Find which search field names matched this page (check title and breadcrumb)
             matched_fields = self._find_matched_fields(search_terms, terms_with_fields, [title, breadcrumb])
 
+            # Check tag label matches
+            if tag_slugs:
+                page_labels = [
+                    l.get("name", "") for l in
+                    page.get("metadata", {}).get("labels", {}).get("results", [])
+                ]
+                tag_matches = self._find_matched_tags(tag_slugs, page_labels, confluence_prefix)
+                matched_fields.extend(tag_matches)
+
             # Filter based on search mode
             if search_mode in ("title_only", "strict"):
-                # Only include results where we can verify the match in title/breadcrumb
+                # Only include results where we can verify the match in title/breadcrumb or labels
                 if not matched_fields:
                     continue
             # For "full_text" mode, include all results
