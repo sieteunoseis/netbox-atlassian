@@ -1,4 +1,4 @@
-{% extends 'generic/object.html' %}
+{% extends 'base/layout.html' %}
 {% load form_helpers %}
 
 {% block title %}Atlassian Plugin Settings{% endblock %}
@@ -124,9 +124,9 @@
                             <td><code>{{ field.attribute }}</code></td>
                             <td>
                                 {% if field.enabled %}
-                                <span class="badge bg-success">Yes</span>
+                                <span class="badge text-bg-success">Yes</span>
                                 {% else %}
-                                <span class="badge bg-secondary">No</span>
+                                <span class="badge text-bg-secondary">No</span>
                                 {% endif %}
                             </td>
                         </tr>

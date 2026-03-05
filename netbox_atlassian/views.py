@@ -333,9 +333,10 @@ class VMAtlassianContentView(LoginRequiredMixin, PermissionRequiredMixin, View):
         )
 
 
-class AtlassianSettingsView(View):
+class AtlassianSettingsView(LoginRequiredMixin, PermissionRequiredMixin, View):
     """View for configuring Atlassian plugin settings."""
 
+    permission_required = "netbox_atlassian.configure_atlassian"
     template_name = "netbox_atlassian/settings.html"
 
     def get_current_config(self):
