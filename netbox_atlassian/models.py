@@ -14,21 +14,10 @@ class Atlassian(models.Model):
         )
 
 
-class DocumentTypeChoices(models.TextChoices):
-    MOP = "mop", "MOP"
-    SOW = "sow", "SOW"
-    CAB = "cab", "CAB"
-
-
 class DocumentTemplate(NetBoxModel):
-    """A reusable document template (MOP, SOW, CAB) rendered with NetBox device data."""
+    """A reusable document template rendered with NetBox device data."""
 
     name = models.CharField(max_length=200, unique=True)
-    document_type = models.CharField(
-        max_length=20,
-        choices=DocumentTypeChoices.choices,
-        verbose_name="Document Type",
-    )
     description = models.TextField(blank=True)
     content = models.TextField(
         help_text=(
@@ -41,12 +30,12 @@ class DocumentTemplate(NetBoxModel):
     )
 
     class Meta:
-        ordering = ["document_type", "name"]
+        ordering = ["name"]
         verbose_name = "Document Template"
         verbose_name_plural = "Document Templates"
 
     def __str__(self):
-        return f"{self.get_document_type_display()} — {self.name}"
+        return self.name
 
     def get_absolute_url(self):
         return reverse("plugins:netbox_atlassian:template_detail", kwargs={"pk": self.pk})

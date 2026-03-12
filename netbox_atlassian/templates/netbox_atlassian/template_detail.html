@@ -14,7 +14,7 @@
     </nav>
     <div>
         <a href="{% url 'plugins:netbox_atlassian:template_generate' object.pk %}"
-           class="btn btn-{{ color }}">
+           class="btn btn-primary">
             <i class="mdi mdi-play"></i> Generate Document
         </a>
         <a href="{% url 'plugins:netbox_atlassian:template_edit' object.pk %}"
@@ -33,7 +33,7 @@
         <div class="card mb-3">
             <div class="card-header">
                 <h5 class="card-title mb-0">
-                    <i class="mdi {{ icon }} text-{{ color }}"></i> Template Info
+                    <i class="mdi mdi-file-document-outline text-primary"></i> Template Info
                 </h5>
             </div>
             <div class="card-body">
@@ -43,14 +43,18 @@
                         <td>{{ object.name }}</td>
                     </tr>
                     <tr>
-                        <th>Type</th>
-                        <td>
-                            <span class="badge text-bg-{{ color }}">{{ object.get_document_type_display }}</span>
-                        </td>
-                    </tr>
-                    <tr>
                         <th>Description</th>
                         <td>{{ object.description|default:"—" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Tags</th>
+                        <td>
+                            {% for tag in object.tags.all %}
+                            <span class="badge" style="background-color: #{{ tag.color }}; color: {% if tag.color == 'ffffff' or tag.color == 'e5e5e5' %}#000{% else %}#fff{% endif %};">{{ tag.name }}</span>
+                            {% empty %}
+                            <span class="text-muted">—</span>
+                            {% endfor %}
+                        </td>
                     </tr>
                     <tr>
                         <th>Created</th>

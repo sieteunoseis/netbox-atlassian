@@ -3,7 +3,7 @@ Views for NetBox Atlassian Plugin
 
 Registers custom tabs on Device detail views to show Jira issues and Confluence pages.
 Provides settings configuration UI.
-Provides Document Library for generating MOP/SOW/CAB documents from NetBox device data.
+Provides Document Library for generating documents from NetBox device data.
 """
 
 import datetime
@@ -574,49 +574,16 @@ if ENDPOINTS_PLUGIN_INSTALLED:
 # Document Library Views
 # ---------------------------------------------------------------------------
 
-DOCUMENT_TYPE_ICONS = {
-    "mop": "mdi-clipboard-list-outline",
-    "sow": "mdi-file-document-outline",
-    "cab": "mdi-calendar-check-outline",
-}
-
-DOCUMENT_TYPE_COLORS = {
-    "mop": "primary",
-    "sow": "success",
-    "cab": "warning",
-}
-
-
 class DocumentTemplateListView(LoginRequiredMixin, View):
-    """Browse all document templates grouped by type."""
+    """Browse all document templates."""
 
     def get(self, request):
         templates = DocumentTemplate.objects.all()
-
-        grouped = {}
-        for t in templates:
-            grouped.setdefault(t.document_type, []).append(t)
-
-        type_labels = dict(DocumentTemplate.document_type.field.choices)
-
-        groups = []
-        for dtype in ["mop", "sow", "cab"]:
-            if dtype in grouped:
-                groups.append(
-                    {
-                        "type": dtype,
-                        "label": type_labels.get(dtype, dtype.upper()),
-                        "icon": DOCUMENT_TYPE_ICONS.get(dtype, "mdi-file-outline"),
-                        "color": DOCUMENT_TYPE_COLORS.get(dtype, "secondary"),
-                        "templates": grouped[dtype],
-                    }
-                )
-
         return render(
             request,
             "netbox_atlassian/template_list.html",
             {
-                "groups": groups,
+                "templates": templates,
                 "total": templates.count(),
             },
         )
@@ -630,11 +597,7 @@ class DocumentTemplateDetailView(LoginRequiredMixin, View):
         return render(
             request,
             "netbox_atlassian/template_detail.html",
-            {
-                "object": template,
-                "icon": DOCUMENT_TYPE_ICONS.get(template.document_type, "mdi-file-outline"),
-                "color": DOCUMENT_TYPE_COLORS.get(template.document_type, "secondary"),
-            },
+            {"object": template},
         )
 
 
@@ -737,8 +700,6 @@ class DocumentGenerateView(LoginRequiredMixin, View):
                 "object": template,
                 "form": form,
                 "rendered": None,
-                "icon": DOCUMENT_TYPE_ICONS.get(template.document_type, "mdi-file-outline"),
-                "color": DOCUMENT_TYPE_COLORS.get(template.document_type, "secondary"),
             },
         )
 
@@ -795,7 +756,5 @@ class DocumentGenerateView(LoginRequiredMixin, View):
                 "form": form,
                 "rendered": rendered,
                 "error": error,
-                "icon": DOCUMENT_TYPE_ICONS.get(template.document_type, "mdi-file-outline"),
-                "color": DOCUMENT_TYPE_COLORS.get(template.document_type, "secondary"),
             },
         )

@@ -22,8 +22,8 @@
         <div class="card mb-3">
             <div class="card-header">
                 <h5 class="card-title mb-0">
-                    <i class="mdi {{ icon }} text-{{ color }}"></i>
-                    {{ object.get_document_type_display }} — {{ object.name }}
+                    <i class="mdi mdi-file-document-outline text-primary"></i>
+                    {{ object.name }}
                 </h5>
             </div>
             <div class="card-body">
@@ -51,7 +51,7 @@
                             e.g. <code>change_request=ITSUP-1234</code>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-{{ color }} w-100">
+                    <button type="submit" class="btn btn-primary w-100">
                         <i class="mdi mdi-play"></i> Generate Document
                     </button>
                 </form>

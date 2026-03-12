@@ -21,38 +21,39 @@
     </div>
 </div>
 {% else %}
-{% for group in groups %}
-<div class="card mb-4">
-    <div class="card-header">
-        <h5 class="card-title mb-0">
-            <i class="mdi {{ group.icon }} text-{{ group.color }}"></i>
-            {{ group.label }}
-            <span class="badge text-bg-secondary ms-1">{{ group.templates|length }}</span>
-        </h5>
-    </div>
+<div class="card">
     <div class="table-responsive">
         <table class="table table-hover mb-0">
             <thead>
                 <tr>
                     <th>Name</th>
                     <th>Description</th>
+                    <th>Tags</th>
                     <th>Last Updated</th>
                     <th class="text-end">Actions</th>
                 </tr>
             </thead>
             <tbody>
-            {% for tmpl in group.templates %}
+            {% for tmpl in templates %}
                 <tr>
                     <td>
                         <a href="{{ tmpl.get_absolute_url }}">
+                            <i class="mdi mdi-file-document-outline text-primary"></i>
                             <strong>{{ tmpl.name }}</strong>
                         </a>
                     </td>
-                    <td class="text-muted">{{ tmpl.description|default:"—" }}</td>
+                    <td class="text-muted">{{ tmpl.description|default:"—"|truncatewords:15 }}</td>
+                    <td>
+                        {% for tag in tmpl.tags.all %}
+                        <span class="badge" style="background-color: #{{ tag.color }}; color: {% if tag.color == 'ffffff' or tag.color == 'e5e5e5' %}#000{% else %}#fff{% endif %};">{{ tag.name }}</span>
+                        {% empty %}
+                        <span class="text-muted">—</span>
+                        {% endfor %}
+                    </td>
                     <td class="text-muted">{{ tmpl.last_updated|date:"d M Y H:i" }}</td>
                     <td class="text-end">
                         <a href="{% url 'plugins:netbox_atlassian:template_generate' tmpl.pk %}"
-                           class="btn btn-sm btn-{{ group.color }}">
+                           class="btn btn-sm btn-primary">
                             <i class="mdi mdi-play"></i> Generate
                         </a>
                         <a href="{% url 'plugins:netbox_atlassian:template_edit' tmpl.pk %}"
@@ -70,6 +71,5 @@
         </table>
     </div>
 </div>
-{% endfor %}
 {% endif %}
 {% endblock %}

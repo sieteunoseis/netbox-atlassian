@@ -125,7 +125,7 @@ class DocumentTemplateForm(NetBoxModelForm):
 
     class Meta:
         model = DocumentTemplate
-        fields = ("name", "document_type", "description", "content", "tags")
+        fields = ("name", "description", "content", "tags")
 
 
 class DocumentGenerateForm(forms.Form):
