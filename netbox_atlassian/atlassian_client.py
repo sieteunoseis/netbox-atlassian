@@ -480,6 +480,169 @@ class AtlassianClient:
         cache.set(cache_key, response, self.cache_timeout)
         return response
 
+    def _convert_wiki_to_storage(self, session, wiki_body: str) -> str | None:
+        """Convert wiki markup to Confluence storage format via the REST API."""
+        url = f"{self.confluence_url}/rest/api/contentbody/convert/storage"
+        headers = {"Content-Type": "application/json"}
+        if self.confluence_token:
+            headers["Authorization"] = f"Bearer {self.confluence_token}"
+        try:
+            kwargs = {
+                "json": {"value": wiki_body, "representation": "wiki"},
+                "headers": headers,
+                "verify": self.confluence_verify_ssl,
+                "timeout": self.timeout,
+            }
+            if not self.confluence_token:
+                kwargs["auth"] = self._get_confluence_auth()
+            resp = session.post(url, **kwargs)
+            resp.raise_for_status()
+            return resp.json().get("value")
+        except Exception as e:
+            logger.warning(f"Wiki-to-storage conversion failed, falling back to wiki: {e}")
+            return None
+
+    @staticmethod
+    def _convert_checkboxes_to_tasks(storage: str) -> str:
+        """Replace <li>[ ] text</li> and <li>☑ text</li> with <ac:task> elements."""
+        import re
+        import uuid
+
+        _DONE_PLACEHOLDER = "\u200b\u2611\u200b"  # matches the placeholder set during wiki prep
+        # Pattern matches [ ] (unchecked) or the placeholder (checked)
+        _CB_PATTERN = re.compile(
+            rf"<li>\s*(?:\[( )\]|({re.escape(_DONE_PLACEHOLDER)}))\s*(.*?)</li>",
+            re.DOTALL,
+        )
+        _CB_DETECT = re.compile(rf"<li>\s*(?:\[ \]|{re.escape(_DONE_PLACEHOLDER)})")
+
+        task_id_counter = [1]
+
+        def _replace_task_list(match):
+            """Convert a <ul> block that contains checkbox items into an <ac:task-list>."""
+            ul_content = match.group(1)
+            # Check if any list item has a checkbox pattern
+            if not _CB_DETECT.search(ul_content):
+                return match.group(0)  # No checkboxes, return unchanged
+
+            tasks = []
+            for li_match in _CB_PATTERN.finditer(ul_content):
+                checked = li_match.group(2) is not None  # placeholder = done
+                body_text = li_match.group(3).strip()
+                status = "complete" if checked else "incomplete"
+                task_id = task_id_counter[0]
+                task_uuid = str(uuid.uuid4())
+                task_id_counter[0] += 1
+                tasks.append(
+                    f"<ac:task>\n"
+                    f"<ac:task-id>{task_id}</ac:task-id>\n"
+                    f"<ac:task-uuid>{task_uuid}</ac:task-uuid>\n"
+                    f"<ac:task-status>{status}</ac:task-status>\n"
+                    f"<ac:task-body>{body_text}</ac:task-body>\n"
+                    f"</ac:task>"
+                )
+
+            # Also keep any non-checkbox <li> items as regular list items
+            non_checkbox_items = re.findall(
+                rf"<li>(?!\s*(?:\[ \]|{re.escape(_DONE_PLACEHOLDER)}))(.*?)</li>",
+                ul_content,
+                re.DOTALL,
+            )
+
+            result = ""
+            if tasks:
+                result += "<ac:task-list>\n" + "\n".join(tasks) + "\n</ac:task-list>"
+            if non_checkbox_items:
+                items = "".join(f"<li>{item}</li>" for item in non_checkbox_items)
+                result += f"<ul>{items}</ul>"
+            return result
+
+        return re.sub(r"<ul>(.*?)</ul>", _replace_task_list, storage, flags=re.DOTALL)
+
+    def create_confluence_page(
+        self, space_key: str, title: str, body: str, parent_id: str
+    ) -> dict:
+        """
+        Create a new Confluence page as a child of the given parent.
+
+        Args:
+            space_key: Confluence space key (e.g. 'Netv')
+            title: Page title
+            body: Page content in Confluence wiki markup (storage format: wiki)
+            parent_id: Parent page ID
+
+        Returns:
+            dict with 'success', 'url', and 'error' keys
+        """
+        if not self.confluence_url:
+            return {"success": False, "url": None, "error": "Confluence URL not configured"}
+
+        session = self._get_session()
+
+        # Step 1: Escape [x] before wiki conversion (Confluence treats it as a link)
+        import re as _re
+        _DONE_PLACEHOLDER = "\u200b\u2611\u200b"  # zero-width space + ballot box + zero-width space
+        wiki_body = _re.sub(r"(\* )\[x\] ", rf"\1{_DONE_PLACEHOLDER} ", body)
+
+        # Step 2: Convert wiki markup to storage format via Confluence API
+        storage_body = self._convert_wiki_to_storage(session, wiki_body)
+        if storage_body is None:
+            # Fallback: post as wiki if conversion fails
+            body_payload = {"wiki": {"value": body, "representation": "wiki"}}
+        else:
+            # Step 3: Convert [ ] and placeholder checkbox bullets into proper <ac:task> elements
+            storage_body = self._convert_checkboxes_to_tasks(storage_body)
+            body_payload = {"storage": {"value": storage_body, "representation": "storage"}}
+
+        url = f"{self.confluence_url}/rest/api/content"
+
+        payload = {
+            "type": "page",
+            "title": title,
+            "space": {"key": space_key},
+            "ancestors": [{"id": str(parent_id)}],
+            "body": body_payload,
+        }
+
+        headers = {"Content-Type": "application/json"}
+        if self.confluence_token:
+            headers["Authorization"] = f"Bearer {self.confluence_token}"
+
+        try:
+            if self.confluence_token:
+                response = session.post(
+                    url,
+                    json=payload,
+                    headers=headers,
+                    verify=self.confluence_verify_ssl,
+                    timeout=self.timeout,
+                )
+            else:
+                response = session.post(
+                    url,
+                    json=payload,
+                    headers=headers,
+                    auth=self._get_confluence_auth(),
+                    verify=self.confluence_verify_ssl,
+                    timeout=self.timeout,
+                )
+            response.raise_for_status()
+            data = response.json()
+            page_url = f"{self.confluence_url}{data.get('_links', {}).get('webui', '')}"
+            return {"success": True, "url": page_url, "error": None, "page_id": data.get("id")}
+        except requests.exceptions.HTTPError as e:
+            error_msg = str(e)
+            try:
+                error_data = e.response.json()
+                error_msg = error_data.get("message", error_msg)
+            except Exception:
+                pass
+            logger.error(f"Confluence create page error: {error_msg}")
+            return {"success": False, "url": None, "error": error_msg}
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Confluence create page error: {e}")
+            return {"success": False, "url": None, "error": str(e)}
+
     def test_jira_connection(self) -> tuple[bool, str]:
         """Test Jira connection."""
         if not self.jira_url:

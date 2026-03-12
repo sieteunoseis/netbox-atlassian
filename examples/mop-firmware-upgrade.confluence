@@ -1,4 +1,4 @@
-h1. Firmware Upgrade — {{ title|default:"(Device Type / Platform)" }}
+{toc}
 
 || Field || Value || Field || Value ||
 | Change Request # | {{ change_request|default:"(CHG-XXXXXX)" }} | Author | {{ mop_author|default:"(Author)" }} |
@@ -72,6 +72,35 @@ If the upgrade fails on any device:
 * [ ] Verify device recovers on previous version
 * [ ] Open incident ticket for investigation
 * [ ] Notify stakeholders
+
+----
+
+h2. 7. Closeout
+
+h3. Lessons Learned
+
+* (Item 1)
+* (Item 2)
+* (Item 3)
+
+h3. Disaster Recovery Plan Review
+
+* [ ] Existing DR Plan Reviewed
+* [ ] Existing DR Plan — No Changes Needed
+* [ ] Existing DR Plan — Changes Confirmed
+* DR Plan Link: (INSERT LINK HERE)
+* Summary of changes: (INSERT SUMMARY HERE)
+
+h3. System Diagram Review
+
+* [ ] System Diagram(s) Reviewed
+* [ ] Diagrams — No Changes Needed
+* [ ] Diagrams — Changes Confirmed and Updated
+
+h3. Additional Follow-Up Work
+
+* (Follow-up item 1)
+* (Follow-up item 2)
 
 ----
 

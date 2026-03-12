@@ -1,4 +1,4 @@
-h1. Maintenance Reset — {{ title|default:"(System Name)" }}
+{toc}
 
 || Field || Value ||
 | AOD | {{ aod|default:"(On-call name)" }} |

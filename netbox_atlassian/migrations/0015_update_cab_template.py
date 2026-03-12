@@ -1,3 +1,8 @@
+"""Update CAB Change Request template with presentation-aligned sections and engineer checklist."""
+
+from django.db import migrations
+
+NEW_CAB_CONTENT = """\
 {toc}
 
 || Field || Value || Field || Value ||
@@ -149,3 +154,25 @@ h3. Additional Follow-Up Work
 ----
 
 _Generated: {{ date }} by {{ generated_by }}_
+"""
+
+
+def update_cab_template(apps, schema_editor):
+    DocumentTemplate = apps.get_model("netbox_atlassian", "DocumentTemplate")
+    try:
+        t = DocumentTemplate.objects.get(name="Standard CAB Request")
+        t.content = NEW_CAB_CONTENT
+        t.save()
+    except DocumentTemplate.DoesNotExist:
+        pass
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ("netbox_atlassian", "0014_add_toc_and_closeout"),
+    ]
+
+    operations = [
+        migrations.RunPython(update_cab_template, reverse_code=migrations.RunPython.noop),
+    ]

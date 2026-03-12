@@ -56,6 +56,16 @@
                             {% endfor %}
                         </td>
                     </tr>
+                    {% if object.confluence_parent_page_id %}
+                    <tr>
+                        <th>Confluence Space</th>
+                        <td>{{ object.confluence_space_key }}</td>
+                    </tr>
+                    <tr>
+                        <th>Confluence Parent</th>
+                        <td>{{ object.confluence_parent_page_id }}</td>
+                    </tr>
+                    {% endif %}
                     <tr>
                         <th>Created</th>
                         <td>{{ object.created|date:"d M Y" }}</td>
@@ -77,35 +87,35 @@
             <div class="card-body">
                 <p class="text-muted small mb-2">Device (from NetBox):</p>
                 <ul class="list-unstyled small font-monospace">
-                    <li><code>{{ '{{' }} device.name {{ '}}' }}</code></li>
-                    <li><code>{{ '{{' }} device.site.name {{ '}}' }}</code></li>
-                    <li><code>{{ '{{' }} device.role.name {{ '}}' }}</code></li>
-                    <li><code>{{ '{{' }} device.serial {{ '}}' }}</code></li>
-                    <li><code>{{ '{{' }} device.asset_tag {{ '}}' }}</code></li>
-                    <li><code>{{ '{{' }} device.primary_ip4 {{ '}}' }}</code></li>
-                    <li><code>{{ '{{' }} device.device_type.model {{ '}}' }}</code></li>
-                    <li><code>{{ '{{' }} device.device_type.manufacturer.name {{ '}}' }}</code></li>
+                    <li><code>{% templatetag openvariable %} device.name {% templatetag closevariable %}</code></li>
+                    <li><code>{% templatetag openvariable %} device.site.name {% templatetag closevariable %}</code></li>
+                    <li><code>{% templatetag openvariable %} device.role.name {% templatetag closevariable %}</code></li>
+                    <li><code>{% templatetag openvariable %} device.serial {% templatetag closevariable %}</code></li>
+                    <li><code>{% templatetag openvariable %} device.asset_tag {% templatetag closevariable %}</code></li>
+                    <li><code>{% templatetag openvariable %} device.primary_ip4 {% templatetag closevariable %}</code></li>
+                    <li><code>{% templatetag openvariable %} device.device_type.model {% templatetag closevariable %}</code></li>
+                    <li><code>{% templatetag openvariable %} device.device_type.manufacturer.name {% templatetag closevariable %}</code></li>
                 </ul>
                 <p class="text-muted small mb-2 mt-2">Loops:</p>
                 <ul class="list-unstyled small font-monospace">
                     <li><code>{% templatetag openblock %} for device in devices {% templatetag closeblock %}</code></li>
                     <li><code>{% templatetag openblock %} for iface in device.interfaces.all {% templatetag closeblock %}</code></li>
                     <li><code>{% templatetag openblock %} for c in device.contacts.all {% templatetag closeblock %}</code></li>
-                    <li><code>{{ '{{' }} c.contact.name {{ '}}' }}</code></li>
-                    <li><code>{{ '{{' }} c.contact.phone {{ '}}' }}</code></li>
-                    <li><code>{{ '{{' }} c.role.name {{ '}}' }}</code></li>
+                    <li><code>{% templatetag openvariable %} c.contact.name {% templatetag closevariable %}</code></li>
+                    <li><code>{% templatetag openvariable %} c.contact.phone {% templatetag closevariable %}</code></li>
+                    <li><code>{% templatetag openvariable %} c.role.name {% templatetag closevariable %}</code></li>
                 </ul>
                 <p class="text-muted small mb-2 mt-2">Auto-generated:</p>
                 <ul class="list-unstyled small font-monospace">
-                    <li><code>{{ '{{' }} date {{ '}}' }}</code></li>
-                    <li><code>{{ '{{' }} generated_by {{ '}}' }}</code></li>
+                    <li><code>{% templatetag openvariable %} date {% templatetag closevariable %}</code></li>
+                    <li><code>{% templatetag openvariable %} generated_by {% templatetag closevariable %}</code></li>
                 </ul>
                 <p class="text-muted small mb-2 mt-2">Extra vars (key=value):</p>
                 <ul class="list-unstyled small font-monospace">
-                    <li><code>{{ '{{' }} change_request {{ '}}' }}</code></li>
-                    <li><code>{{ '{{' }} mop_author {{ '}}' }}</code></li>
-                    <li><code>{{ '{{' }} change_window {{ '}}' }}</code></li>
-                    <li><code>{{ '{{' }} approved_by {{ '}}' }}</code></li>
+                    <li><code>{% templatetag openvariable %} change_request {% templatetag closevariable %}</code></li>
+                    <li><code>{% templatetag openvariable %} mop_author {% templatetag closevariable %}</code></li>
+                    <li><code>{% templatetag openvariable %} change_window {% templatetag closevariable %}</code></li>
+                    <li><code>{% templatetag openvariable %} approved_by {% templatetag closevariable %}</code></li>
                     <li><em class="text-muted">…any key you define</em></li>
                 </ul>
             </div>

@@ -708,6 +708,7 @@ class DocumentGenerateView(LoginRequiredMixin, View):
         form = DocumentGenerateForm(request.POST)
         rendered = None
         error = None
+        confluence_url = None
 
         if form.is_valid():
             device_ids = form.cleaned_data.get("devices") or []
@@ -719,14 +720,14 @@ class DocumentGenerateView(LoginRequiredMixin, View):
             if selected_tags and not device_ids and not vm_ids:
                 tag_slugs = [t.slug for t in selected_tags]
                 devices = list(Device.objects.filter(tags__slug__in=tag_slugs).distinct().prefetch_related(
-                    "site", "role", "device_type__manufacturer", "interfaces__ip_addresses", "contacts__contact", "contacts__role"
+                    "site", "role", "device_type__manufacturer", "interfaces__ip_addresses", "interfaces__cable", "contacts__contact", "contacts__role"
                 ))
                 vms = list(VirtualMachine.objects.filter(tags__slug__in=tag_slugs).distinct().prefetch_related(
                     "site", "role", "cluster", "interfaces__ip_addresses", "contacts__contact", "contacts__role"
                 ))
             else:
                 devices = list(Device.objects.filter(pk__in=[d.pk for d in device_ids]).prefetch_related(
-                    "site", "role", "device_type__manufacturer", "interfaces__ip_addresses", "contacts__contact", "contacts__role"
+                    "site", "role", "device_type__manufacturer", "interfaces__ip_addresses", "interfaces__cable", "contacts__contact", "contacts__role"
                 ))
                 vms = list(VirtualMachine.objects.filter(pk__in=[v.pk for v in vm_ids]).prefetch_related(
                     "site", "role", "cluster", "interfaces__ip_addresses", "contacts__contact", "contacts__role"
@@ -734,6 +735,32 @@ class DocumentGenerateView(LoginRequiredMixin, View):
 
             # Combined list — templates use {% for device in devices %} for both
             all_objects = devices + vms
+
+            # Annotate each device with filtered interfaces and connected devices
+            for obj in all_objects:
+                if hasattr(obj, "interfaces"):
+                    active_ifaces = []
+                    connected = {}  # device_id -> (device, interface_name, peer_interface_name)
+                    for iface in obj.interfaces.all():
+                        has_ips = iface.ip_addresses.exists()
+                        has_cable = getattr(iface, "cable_id", None) is not None
+                        if has_ips or has_cable:
+                            active_ifaces.append(iface)
+                        if has_cable:
+                            for peer in iface.link_peers:
+                                peer_device = getattr(peer, "device", None)
+                                if peer_device and peer_device.pk != obj.pk:
+                                    if peer_device.pk not in connected:
+                                        connected[peer_device.pk] = {
+                                            "device": peer_device,
+                                            "connections": [],
+                                        }
+                                    connected[peer_device.pk]["connections"].append({
+                                        "local_interface": iface.name,
+                                        "remote_interface": peer.name,
+                                    })
+                    obj.active_interfaces = active_ifaces
+                    obj.connected_devices = list(connected.values())
 
             # Deduplicate contacts across all selected objects by contact ID
             seen_contact_ids = set()
@@ -759,6 +786,31 @@ class DocumentGenerateView(LoginRequiredMixin, View):
             except Exception as e:
                 error = str(e)
 
+            # Handle "Post to Confluence" action
+            confluence_url = None
+            if rendered and request.POST.get("action") == "post_to_confluence":
+                if template.confluence_parent_page_id and template.confluence_space_key:
+                    client = get_client()
+                    page_title = request.POST.get("confluence_title", "").strip()
+                    if not page_title:
+                        page_title = f"{template.name} — {context['date']}"
+                    result = client.create_confluence_page(
+                        space_key=template.confluence_space_key,
+                        title=page_title,
+                        body=rendered,
+                        parent_id=template.confluence_parent_page_id,
+                    )
+                    if result["success"]:
+                        confluence_url = result["url"]
+                        messages.success(
+                            request,
+                            f"Page created in Confluence: {page_title}",
+                        )
+                    else:
+                        messages.error(request, f"Confluence error: {result['error']}")
+                else:
+                    messages.error(request, "Confluence parent page ID and space key must be configured on this template.")
+
         return render(
             request,
             "netbox_atlassian/template_generate.html",
@@ -767,5 +819,6 @@ class DocumentGenerateView(LoginRequiredMixin, View):
                 "form": form,
                 "rendered": rendered,
                 "error": error,
+                "confluence_url": confluence_url,
             },
         )

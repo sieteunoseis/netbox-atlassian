@@ -28,6 +28,20 @@ class DocumentTemplate(NetBoxModel):
             "Extra variables passed at generation time are also available."
         )
     )
+    confluence_parent_page_id = models.CharField(
+        max_length=20,
+        blank=True,
+        default="",
+        verbose_name="Parent Page ID",
+        help_text="Confluence page ID for the parent page. Enables posting generated documents as child pages.",
+    )
+    confluence_space_key = models.CharField(
+        max_length=50,
+        blank=True,
+        default="",
+        verbose_name="Space Key",
+        help_text="Confluence space key. Required when parent page ID is set.",
+    )
 
     class Meta:
         ordering = ["name"]

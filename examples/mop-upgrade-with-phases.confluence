@@ -1,4 +1,4 @@
-h1. Method of Procedure — {{ title|default:"(System Upgrade Title)" }}
+{toc}
 
 h2. Change Summary
 
@@ -129,8 +129,10 @@ h3. Lessons Learned
 h3. Disaster Recovery Plan Review
 
 * [ ] Existing DR Plan Reviewed
-* [ ] DR Plan — No Changes Needed
-* [ ] DR Plan — Changes Confirmed and Updated
+* [ ] Existing DR Plan — No Changes Needed
+* [ ] Existing DR Plan — Changes Confirmed
+* DR Plan Link: (INSERT LINK HERE)
+* Summary of changes: (INSERT SUMMARY HERE)
 
 h3. System Diagram Review
 

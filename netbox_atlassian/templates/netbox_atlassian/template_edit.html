@@ -32,9 +32,12 @@
                 </div>
                 <div class="card-body">
                     {% render_field form.name %}
-                    {% render_field form.document_type %}
                     {% render_field form.description %}
                     {% render_field form.tags %}
+                    <hr class="my-3">
+                    <p class="text-muted small mb-2"><strong>Confluence Integration</strong></p>
+                    {% render_field form.confluence_space_key %}
+                    {% render_field form.confluence_parent_page_id %}
                 </div>
             </div>
 

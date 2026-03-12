@@ -1,4 +1,5 @@
-h1. Method of Procedure — {{ title|default:"(Change Title)" }}
+{toc}
+
 {{ subtitle|default:"" }}
 
 h2. Change Summary
@@ -33,27 +34,20 @@ h3. Key Considerations
 
 h2. 3. Affected Devices
 
-{% for device in devices %}
-h3. {{ device.name }}
-
-|| Field || Value ||
-| Site | {{ device.site.name }} |
-| Role | {{ device.role.name }} |
-{% if device.device_type %}| Manufacturer | {{ device.device_type.manufacturer.name }} |
-| Model | {{ device.device_type.model }} |
-{% endif %}{% if device.cluster %}| Cluster | {{ device.cluster.name }} |
-{% endif %}{% if device.serial %}| Serial Number | {{ device.serial }} |
-{% endif %}{% if device.asset_tag %}| Asset Tag | {{ device.asset_tag }} |
-{% endif %}| Primary IP | {{ device.primary_ip4|default:"N/A" }} |
-{% if device.rack %}| Rack | {{ device.rack }} |
-{% endif %}
-
-h4. Interfaces
+|| Device || Site || Role || Model || Primary IP ||
+{% for device in devices %}| {{ device.name }} | {{ device.site.name }} | {{ device.role.name }} | {% if device.device_type %}{{ device.device_type.manufacturer.name }} {{ device.device_type.model }}{% endif %} | {{ device.primary_ip4|default:"N/A" }} |
+{% endfor %}
+{% for device in devices %}{% if device.active_interfaces %}
+h3. {{ device.name }} — Interfaces
 
 || Interface || Description || IP Address(es) ||
-{% for iface in device.interfaces.all %}| {{ iface.name }} | {{ iface.description|default:"" }} | {% for ip in iface.ip_addresses.all %}{{ ip.address }} {% endfor %} |
-{% endfor %}
-{% endfor %}
+{% for iface in device.active_interfaces %}| {{ iface.name }} | {{ iface.description|default:"" }} | {% for ip in iface.ip_addresses.all %}{{ ip.address }} {% endfor %} |
+{% endfor %}{% endif %}{% if device.connected_devices %}
+h3. {{ device.name }} — Connected Devices
+
+|| Local Interface || Remote Device || Remote Interface ||
+{% for conn in device.connected_devices %}{% for link in conn.connections %}| {{ link.local_interface }} | {{ conn.device.name }} | {{ link.remote_interface }} |
+{% endfor %}{% endfor %}{% endif %}{% endfor %}
 
 ----
 
@@ -91,6 +85,35 @@ If the change must be rolled back:
 * [ ] Rollback Step 1 — (Description)
 * [ ] Rollback Step 2 — (Description)
 * [ ] Notify stakeholders of rollback
+
+----
+
+h2. 8. Closeout
+
+h3. Lessons Learned
+
+* (Item 1)
+* (Item 2)
+* (Item 3)
+
+h3. Disaster Recovery Plan Review
+
+* [ ] Existing DR Plan Reviewed
+* [ ] Existing DR Plan — No Changes Needed
+* [ ] Existing DR Plan — Changes Confirmed
+* DR Plan Link: (INSERT LINK HERE)
+* Summary of changes: (INSERT SUMMARY HERE)
+
+h3. System Diagram Review
+
+* [ ] System Diagram(s) Reviewed
+* [ ] Diagrams — No Changes Needed
+* [ ] Diagrams — Changes Confirmed and Updated
+
+h3. Additional Follow-Up Work
+
+* (Follow-up item 1)
+* (Follow-up item 2)
 
 ----
 

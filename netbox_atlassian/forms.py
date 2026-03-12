@@ -124,9 +124,22 @@ class DocumentTemplateForm(NetBoxModelForm):
         ),
     )
 
+    confluence_parent_page_id = forms.CharField(
+        required=False,
+        label="Parent Page ID",
+        help_text="Confluence page ID for the parent page. Generated documents will be created as child pages. Enables the 'Post to Confluence' button.",
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Page ID"}),
+    )
+    confluence_space_key = forms.CharField(
+        required=False,
+        label="Space Key",
+        help_text="Confluence space key. Required when parent page ID is set.",
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Space key"}),
+    )
+
     class Meta:
         model = DocumentTemplate
-        fields = ("name", "description", "content", "tags")
+        fields = ("name", "description", "content", "confluence_space_key", "confluence_parent_page_id", "tags")
 
 
 class DocumentGenerateForm(forms.Form):

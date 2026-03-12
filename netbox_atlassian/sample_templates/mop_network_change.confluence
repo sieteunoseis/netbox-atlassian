@@ -1,0 +1,95 @@
+h1. Method of Procedure — {{ title|default:"[Change Title]" }}
+{{ subtitle|default:"" }}
+
+h2. Change Summary
+
+|| Field || Value || Field || Value ||
+| Change Request # | {{ change_request|default:"[ITSUP-XXXXXX]" }} | MOP Author | {{ mop_author|default:"[Author]" }} |
+| Change Window | {{ change_window|default:"[DDMONYYYY HHMM]" }} | Approved By | {{ approved_by|default:"[Approver Name]" }} |
+| Expected Duration | {{ expected_duration|default:"[X minutes]" }} | Impact Level | {{ impact_level|default:"[Low/Medium/High]" }} |
+| Rollback Time | {{ rollback_time|default:"[X minutes]" }} | Rollback Deadline | {{ rollback_deadline|default:"[HHMM]" }} |
+
+----
+
+h2. 1. Personnel & Responsibilities
+
+|| Role || Name || Contact || Responsibility ||
+{% for device in devices %}{% for c in device.contacts.all %}| {{ c.role.name|default:"[Role]" }} | {{ c.contact.name }} | {{ c.contact.phone|default:"N/A" }} | [Responsibility] |
+{% endfor %}{% endfor %}
+
+----
+
+h2. 2. Overview
+
+{{ overview|default:"[Describe the purpose and scope of this change.]" }}
+
+h3. Key Considerations
+
+* [Key consideration 1]
+* [Key consideration 2]
+* [Key consideration 3]
+
+----
+
+h2. 3. Affected Devices
+
+{% for device in devices %}
+h3. {{ device.name }}
+
+|| Field || Value ||
+| Site | {{ device.site.name }} |
+| Role | {{ device.role.name }} |
+| Manufacturer | {{ device.device_type.manufacturer.name }} |
+| Model | {{ device.device_type.model }} |
+| Serial Number | {{ device.serial|default:"N/A" }} |
+| Asset Tag | {{ device.asset_tag|default:"N/A" }} |
+| Primary IP | {{ device.primary_ip4|default:"N/A" }} |
+| Rack | {{ device.rack|default:"N/A" }} |
+
+h4. Interfaces
+
+|| Interface || Description || IP Address(es) ||
+{% for iface in device.interfaces.all %}| {{ iface.name }} | {{ iface.description|default:"" }} | {% for ip in iface.ip_addresses.all %}{{ ip.address }} {% endfor %} |
+{% endfor %}
+{% endfor %}
+
+----
+
+h2. 4. Pre-Change Verification
+
+* [ ] Confirm change window is approved and stakeholders notified
+* [ ] Verify current connectivity / baseline state
+* [ ] Confirm rollback procedure is understood and ready
+{% for device in devices %}* [ ] Verify {{ device.name }} is reachable ({{ device.primary_ip4|default:"N/A" }})
+{% endfor %}
+
+----
+
+h2. 5. Change Steps
+
+* [ ] Step 1 — [Description]
+* [ ] Step 2 — [Description]
+* [ ] Step 3 — [Description]
+
+----
+
+h2. 6. Post-Change Verification
+
+* [ ] Verify expected functionality restored / working
+* [ ] Confirm no alerts or errors in monitoring
+{% for device in devices %}* [ ] Verify {{ device.name }} operating normally
+{% endfor %}* [ ] Update change ticket and notify stakeholders
+
+----
+
+h2. 7. Rollback Plan
+
+If the change must be rolled back:
+
+* [ ] Rollback Step 1 — [Description]
+* [ ] Rollback Step 2 — [Description]
+* [ ] Notify stakeholders of rollback
+
+----
+
+_Generated: {{ date }} by {{ generated_by }}_

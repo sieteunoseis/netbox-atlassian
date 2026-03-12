@@ -1,4 +1,4 @@
-h1. Statement of Work — {{ title|default:"(Project Title)" }}
+{toc}
 
 || Field || Value ||
 | Project # | {{ project_number|default:"(Project Number)" }} |
@@ -31,15 +31,8 @@ h3. Out of Scope
 
 h2. 3. Affected Devices
 
-{% for device in devices %}
-h3. {{ device.name }}
-
-|| Field || Value ||
-| Site | {{ device.site.name }} |
-| Role | {{ device.role.name }} |
-{% if device.device_type %}| Model | {{ device.device_type.manufacturer.name }} {{ device.device_type.model }} |
-{% endif %}{% if device.serial %}| Serial Number | {{ device.serial }} |
-{% endif %}| Primary IP | {{ device.primary_ip4|default:"N/A" }} |
+|| Device || Site || Role || Model || Primary IP ||
+{% for device in devices %}| {{ device.name }} | {{ device.site.name }} | {{ device.role.name }} | {% if device.device_type %}{{ device.device_type.manufacturer.name }} {{ device.device_type.model }}{% endif %} | {{ device.primary_ip4|default:"N/A" }} |
 {% endfor %}
 
 ----

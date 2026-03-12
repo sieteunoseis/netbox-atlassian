@@ -44,7 +44,7 @@
                             e.g. <code>change_request=ITSUP-1234</code>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">
+                    <button type="submit" name="action" value="generate" class="btn btn-primary w-100">
                         <i class="mdi mdi-play"></i> Generate Document
                     </button>
                 </form>
@@ -58,6 +58,14 @@
         <div class="alert alert-danger">
             <i class="mdi mdi-alert-circle"></i>
             <strong>Template error:</strong> {{ error }}
+        </div>
+        {% endif %}
+
+        {% if confluence_url %}
+        <div class="alert alert-success">
+            <i class="mdi mdi-check-circle"></i>
+            Page created in Confluence:
+            <a href="{{ confluence_url }}" target="_blank" rel="noopener">{{ confluence_url }}</a>
         </div>
         {% endif %}
 
@@ -77,6 +85,22 @@
                           rows="30" readonly
                           style="resize:vertical; font-size:0.8rem;">{{ rendered }}</textarea>
             </div>
+            {% if object.confluence_parent_page_id %}
+            <div class="card-footer">
+                <form method="post" id="confluence-form" class="d-flex gap-2 align-items-end">
+                    {% csrf_token %}
+                    <div class="flex-grow-1">
+                        <label class="form-label small mb-1">Page Title</label>
+                        <input type="text" name="confluence_title" class="form-control form-control-sm"
+                               value="{{ confluence_title|default:'' }}"
+                               placeholder="Enter a title for the Confluence page" required>
+                    </div>
+                    <button type="submit" name="action" value="post_to_confluence" class="btn btn-sm btn-primary text-nowrap">
+                        <i class="mdi mdi-cloud-upload-outline"></i> Post to Confluence
+                    </button>
+                </form>
+            </div>
+            {% endif %}
         </div>
         {% else %}
         <div class="card">
@@ -105,6 +129,28 @@ function copyOutput() {
             btn.classList.remove('btn-success');
             btn.classList.add('btn-outline-secondary');
         }, 2000);
+    });
+}
+
+/**
+ * Copy generate form values into the Confluence post form before submit.
+ */
+var cfForm = document.getElementById('confluence-form');
+if (cfForm) {
+    cfForm.addEventListener('submit', function() {
+        // Remove any previously-copied hidden fields
+        cfForm.querySelectorAll('input.copied-field').forEach(function(el) { el.remove(); });
+        // Copy all values from the generate form
+        var genForm = document.getElementById('generate-form');
+        var formData = new FormData(genForm);
+        for (var pair of formData.entries()) {
+            var hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = pair[0];
+            hidden.value = pair[1];
+            hidden.className = 'copied-field';
+            cfForm.appendChild(hidden);
+        }
     });
 }
 
