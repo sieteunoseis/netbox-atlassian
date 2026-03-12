@@ -107,5 +107,61 @@ function copyOutput() {
         }, 2000);
     });
 }
+
+/**
+ * Auto-fill devices/VMs when a tag is selected.
+ * Watches the tag TomSelect for changes, fetches all matching objects
+ * from the NetBox API, and adds them to the devices/VMs TomSelect instances.
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    // Wait for TomSelect to initialize on the widgets
+    setTimeout(function() {
+        const tagSelect = document.getElementById('id_tag');
+        const deviceSelect = document.getElementById('id_devices');
+        const vmSelect = document.getElementById('id_virtual_machines');
+
+        if (!tagSelect || !tagSelect.tomselect) return;
+
+        const tagTS = tagSelect.tomselect;
+        const deviceTS = deviceSelect ? deviceSelect.tomselect : null;
+        const vmTS = vmSelect ? vmSelect.tomselect : null;
+
+        tagTS.on('change', function() {
+            const tagIds = tagTS.getValue();
+            if (!tagIds || (Array.isArray(tagIds) && tagIds.length === 0) || tagIds === '') return;
+
+            const tagIdParam = Array.isArray(tagIds) ? tagIds.join('&tag_id=') : tagIds;
+
+            // Fetch devices matching the tag(s)
+            if (deviceTS) {
+                fetch(`/api/dcim/devices/?tag_id=${tagIdParam}&limit=500&brief=true`)
+                    .then(r => r.json())
+                    .then(data => {
+                        (data.results || []).forEach(function(dev) {
+                            // Add option if not already present, then select it
+                            if (!deviceTS.options[dev.id]) {
+                                deviceTS.addOption({value: dev.id, text: dev.display || dev.name});
+                            }
+                            deviceTS.addItem(dev.id, true);
+                        });
+                    });
+            }
+
+            // Fetch VMs matching the tag(s)
+            if (vmTS) {
+                fetch(`/api/virtualization/virtual-machines/?tag_id=${tagIdParam}&limit=500&brief=true`)
+                    .then(r => r.json())
+                    .then(data => {
+                        (data.results || []).forEach(function(vm) {
+                            if (!vmTS.options[vm.id]) {
+                                vmTS.addOption({value: vm.id, text: vm.display || vm.name});
+                            }
+                            vmTS.addItem(vm.id, true);
+                        });
+                    });
+            }
+        });
+    }, 500);
+});
 </script>
 {% endblock %}
