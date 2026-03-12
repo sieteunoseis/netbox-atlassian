@@ -3,8 +3,10 @@ Views for NetBox Atlassian Plugin
 
 Registers custom tabs on Device detail views to show Jira issues and Confluence pages.
 Provides settings configuration UI.
+Provides Document Library for generating MOP/SOW/CAB documents from NetBox device data.
 """
 
+import datetime
 import re
 
 from dcim.models import Device
@@ -12,7 +14,8 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, redirect, render
+from django.template import Context, Template
 from django.template.loader import render_to_string
 from django.views import View
 from netbox.views import generic
@@ -20,7 +23,8 @@ from utilities.views import ViewTab, register_model_view
 from virtualization.models import VirtualMachine
 
 from .atlassian_client import get_client
-from .forms import AtlassianSettingsForm
+from .forms import AtlassianSettingsForm, DocumentGenerateForm, DocumentTemplateForm
+from .models import DocumentTemplate
 
 # Check if netbox_endpoints plugin is installed
 try:
@@ -564,3 +568,234 @@ if ENDPOINTS_PLUGIN_INSTALLED:
                     request=request,
                 )
             )
+
+
+# ---------------------------------------------------------------------------
+# Document Library Views
+# ---------------------------------------------------------------------------
+
+DOCUMENT_TYPE_ICONS = {
+    "mop": "mdi-clipboard-list-outline",
+    "sow": "mdi-file-document-outline",
+    "cab": "mdi-calendar-check-outline",
+}
+
+DOCUMENT_TYPE_COLORS = {
+    "mop": "primary",
+    "sow": "success",
+    "cab": "warning",
+}
+
+
+class DocumentTemplateListView(LoginRequiredMixin, View):
+    """Browse all document templates grouped by type."""
+
+    def get(self, request):
+        templates = DocumentTemplate.objects.all()
+
+        grouped = {}
+        for t in templates:
+            grouped.setdefault(t.document_type, []).append(t)
+
+        type_labels = dict(DocumentTemplate.document_type.field.choices)
+
+        groups = []
+        for dtype in ["mop", "sow", "cab"]:
+            if dtype in grouped:
+                groups.append(
+                    {
+                        "type": dtype,
+                        "label": type_labels.get(dtype, dtype.upper()),
+                        "icon": DOCUMENT_TYPE_ICONS.get(dtype, "mdi-file-outline"),
+                        "color": DOCUMENT_TYPE_COLORS.get(dtype, "secondary"),
+                        "templates": grouped[dtype],
+                    }
+                )
+
+        return render(
+            request,
+            "netbox_atlassian/template_list.html",
+            {
+                "groups": groups,
+                "total": templates.count(),
+            },
+        )
+
+
+class DocumentTemplateDetailView(LoginRequiredMixin, View):
+    """Show a single document template with option to generate."""
+
+    def get(self, request, pk):
+        template = get_object_or_404(DocumentTemplate, pk=pk)
+        return render(
+            request,
+            "netbox_atlassian/template_detail.html",
+            {
+                "object": template,
+                "icon": DOCUMENT_TYPE_ICONS.get(template.document_type, "mdi-file-outline"),
+                "color": DOCUMENT_TYPE_COLORS.get(template.document_type, "secondary"),
+            },
+        )
+
+
+class DocumentTemplateCreateView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    """Create a new document template."""
+
+    permission_required = "netbox_atlassian.add_documenttemplate"
+
+    def get(self, request):
+        form = DocumentTemplateForm()
+        return render(
+            request,
+            "netbox_atlassian/template_edit.html",
+            {"form": form, "object": None},
+        )
+
+    def post(self, request):
+        form = DocumentTemplateForm(request.POST)
+        if form.is_valid():
+            template = form.save()
+            messages.success(request, f"Template '{template.name}' created.")
+            return redirect(template.get_absolute_url())
+        return render(
+            request,
+            "netbox_atlassian/template_edit.html",
+            {"form": form, "object": None},
+        )
+
+
+class DocumentTemplateEditView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    """Edit an existing document template."""
+
+    permission_required = "netbox_atlassian.change_documenttemplate"
+
+    def get(self, request, pk):
+        template = get_object_or_404(DocumentTemplate, pk=pk)
+        form = DocumentTemplateForm(instance=template)
+        return render(
+            request,
+            "netbox_atlassian/template_edit.html",
+            {"form": form, "object": template},
+        )
+
+    def post(self, request, pk):
+        template = get_object_or_404(DocumentTemplate, pk=pk)
+        form = DocumentTemplateForm(request.POST, instance=template)
+        if form.is_valid():
+            template = form.save()
+            messages.success(request, f"Template '{template.name}' updated.")
+            return redirect(template.get_absolute_url())
+        return render(
+            request,
+            "netbox_atlassian/template_edit.html",
+            {"form": form, "object": template},
+        )
+
+
+class DocumentTemplateDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    """Delete a document template."""
+
+    permission_required = "netbox_atlassian.delete_documenttemplate"
+
+    def get(self, request, pk):
+        template = get_object_or_404(DocumentTemplate, pk=pk)
+        return render(
+            request,
+            "netbox_atlassian/template_delete.html",
+            {"object": template},
+        )
+
+    def post(self, request, pk):
+        template = get_object_or_404(DocumentTemplate, pk=pk)
+        name = template.name
+        template.delete()
+        messages.success(request, f"Template '{name}' deleted.")
+        return redirect("plugins:netbox_atlassian:template_list")
+
+
+def _parse_extra_vars(raw: str) -> dict:
+    """Parse key=value lines from the extra_vars textarea into a dict."""
+    result = {}
+    for line in raw.splitlines():
+        line = line.strip()
+        if "=" in line:
+            key, _, value = line.partition("=")
+            result[key.strip()] = value.strip()
+    return result
+
+
+class DocumentGenerateView(LoginRequiredMixin, View):
+    """Select devices and extra variables, then render a template."""
+
+    def get(self, request, pk):
+        template = get_object_or_404(DocumentTemplate, pk=pk)
+        form = DocumentGenerateForm()
+        return render(
+            request,
+            "netbox_atlassian/template_generate.html",
+            {
+                "object": template,
+                "form": form,
+                "rendered": None,
+                "icon": DOCUMENT_TYPE_ICONS.get(template.document_type, "mdi-file-outline"),
+                "color": DOCUMENT_TYPE_COLORS.get(template.document_type, "secondary"),
+            },
+        )
+
+    def post(self, request, pk):
+        template = get_object_or_404(DocumentTemplate, pk=pk)
+        form = DocumentGenerateForm(request.POST)
+        rendered = None
+        error = None
+
+        if form.is_valid():
+            device_ids = form.cleaned_data.get("devices") or []
+            vm_ids = form.cleaned_data.get("virtual_machines") or []
+            extra_vars = _parse_extra_vars(form.cleaned_data.get("extra_vars") or "")
+
+            devices = list(Device.objects.filter(pk__in=[d.pk for d in device_ids]).prefetch_related(
+                "site", "role", "device_type__manufacturer", "interfaces__ip_addresses", "contacts__contact", "contacts__role"
+            ))
+            vms = list(VirtualMachine.objects.filter(pk__in=[v.pk for v in vm_ids]).prefetch_related(
+                "site", "role", "cluster", "interfaces__ip_addresses", "contacts__contact", "contacts__role"
+            ))
+
+            # Combined list — templates use {% for device in devices %} for both
+            all_objects = devices + vms
+
+            # Deduplicate contacts across all selected objects by contact ID
+            seen_contact_ids = set()
+            unique_contacts = []
+            for obj in all_objects:
+                for assignment in obj.contacts.all():
+                    if assignment.contact_id not in seen_contact_ids:
+                        seen_contact_ids.add(assignment.contact_id)
+                        unique_contacts.append(assignment)
+
+            context = {
+                "devices": all_objects,
+                "device": all_objects[0] if all_objects else None,
+                "unique_contacts": unique_contacts,
+                "date": datetime.date.today().strftime("%d%b%Y").upper(),
+                "generated_by": request.user.get_full_name() or request.user.username,
+            }
+            context.update(extra_vars)
+
+            try:
+                django_template = Template("{% autoescape off %}" + template.content + "{% endautoescape %}")
+                rendered = django_template.render(Context(context))
+            except Exception as e:
+                error = str(e)
+
+        return render(
+            request,
+            "netbox_atlassian/template_generate.html",
+            {
+                "object": template,
+                "form": form,
+                "rendered": rendered,
+                "error": error,
+                "icon": DOCUMENT_TYPE_ICONS.get(template.document_type, "mdi-file-outline"),
+                "color": DOCUMENT_TYPE_COLORS.get(template.document_type, "secondary"),
+            },
+        )

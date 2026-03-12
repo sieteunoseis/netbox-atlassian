@@ -1,0 +1,118 @@
+{% extends 'base/layout.html' %}
+{% load form_helpers %}
+
+{% block title %}Generate — {{ object.name }}{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'plugins:netbox_atlassian:template_list' %}">Document Library</a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ object.get_absolute_url }}">{{ object.name }}</a>
+        </li>
+        <li class="breadcrumb-item active">Generate</li>
+    </ol>
+</nav>
+
+<div class="row">
+    <!-- Left: form -->
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="mdi {{ icon }} text-{{ color }}"></i>
+                    {{ object.get_document_type_display }} — {{ object.name }}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if object.description %}
+                <p class="text-muted small">{{ object.description }}</p>
+                {% endif %}
+
+                <form method="post" id="generate-form">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Devices</label>
+                        {{ form.devices }}
+                        <div class="form-text">Physical devices from DCIM.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Virtual Machines</label>
+                        {{ form.virtual_machines }}
+                        <div class="form-text">VMs from Virtualization. Combined with devices above into the <code>devices</code> loop.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Extra Variables</label>
+                        {{ form.extra_vars }}
+                        <div class="form-text">
+                            One per line: <code>key=value</code><br>
+                            e.g. <code>change_request=ITSUP-1234</code>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-{{ color }} w-100">
+                        <i class="mdi mdi-play"></i> Generate Document
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right: output -->
+    <div class="col-md-8">
+        {% if error %}
+        <div class="alert alert-danger">
+            <i class="mdi mdi-alert-circle"></i>
+            <strong>Template error:</strong> {{ error }}
+        </div>
+        {% endif %}
+
+        {% if rendered %}
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="mdi mdi-text-box-check-outline text-success"></i> Generated Output
+                </h5>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="copy-btn"
+                        onclick="copyOutput()">
+                    <i class="mdi mdi-content-copy"></i> Copy to Clipboard
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <textarea id="output-text" class="form-control font-monospace border-0 rounded-0"
+                          rows="30" readonly
+                          style="resize:vertical; font-size:0.8rem;">{{ rendered }}</textarea>
+            </div>
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-body text-center text-muted py-5">
+                <i class="mdi mdi-text-box-outline" style="font-size:3rem;"></i>
+                <p class="mt-2">Select devices and click <strong>Generate Document</strong> to see output here.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function copyOutput() {
+    const textarea = document.getElementById('output-text');
+    textarea.select();
+    textarea.setSelectionRange(0, textarea.value.length);
+    navigator.clipboard.writeText(textarea.value).then(function() {
+        const btn = document.getElementById('copy-btn');
+        const original = btn.innerHTML;
+        btn.innerHTML = '<i class="mdi mdi-check"></i> Copied!';
+        btn.classList.remove('btn-outline-secondary');
+        btn.classList.add('btn-success');
+        setTimeout(function() {
+            btn.innerHTML = original;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-outline-secondary');
+        }, 2000);
+    });
+}
+</script>
+{% endblock %}

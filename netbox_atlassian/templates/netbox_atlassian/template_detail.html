@@ -1,0 +1,124 @@
+{% extends 'base/layout.html' %}
+
+{% block title %}{{ object }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="{% url 'plugins:netbox_atlassian:template_list' %}">Document Library</a>
+            </li>
+            <li class="breadcrumb-item active">{{ object.name }}</li>
+        </ol>
+    </nav>
+    <div>
+        <a href="{% url 'plugins:netbox_atlassian:template_generate' object.pk %}"
+           class="btn btn-{{ color }}">
+            <i class="mdi mdi-play"></i> Generate Document
+        </a>
+        <a href="{% url 'plugins:netbox_atlassian:template_edit' object.pk %}"
+           class="btn btn-outline-secondary ms-1">
+            <i class="mdi mdi-pencil"></i> Edit
+        </a>
+        <a href="{% url 'plugins:netbox_atlassian:template_delete' object.pk %}"
+           class="btn btn-outline-danger ms-1">
+            <i class="mdi mdi-trash-can-outline"></i> Delete
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="mdi {{ icon }} text-{{ color }}"></i> Template Info
+                </h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm mb-0">
+                    <tr>
+                        <th>Name</th>
+                        <td>{{ object.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Type</th>
+                        <td>
+                            <span class="badge text-bg-{{ color }}">{{ object.get_document_type_display }}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Description</th>
+                        <td>{{ object.description|default:"—" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Created</th>
+                        <td>{{ object.created|date:"d M Y" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Last Updated</th>
+                        <td>{{ object.last_updated|date:"d M Y H:i" }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="mdi mdi-information-outline"></i> Available Variables
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-2">Device (from NetBox):</p>
+                <ul class="list-unstyled small font-monospace">
+                    <li><code>{{ '{{' }} device.name {{ '}}' }}</code></li>
+                    <li><code>{{ '{{' }} device.site.name {{ '}}' }}</code></li>
+                    <li><code>{{ '{{' }} device.role.name {{ '}}' }}</code></li>
+                    <li><code>{{ '{{' }} device.serial {{ '}}' }}</code></li>
+                    <li><code>{{ '{{' }} device.asset_tag {{ '}}' }}</code></li>
+                    <li><code>{{ '{{' }} device.primary_ip4 {{ '}}' }}</code></li>
+                    <li><code>{{ '{{' }} device.device_type.model {{ '}}' }}</code></li>
+                    <li><code>{{ '{{' }} device.device_type.manufacturer.name {{ '}}' }}</code></li>
+                </ul>
+                <p class="text-muted small mb-2 mt-2">Loops:</p>
+                <ul class="list-unstyled small font-monospace">
+                    <li><code>{% templatetag openblock %} for device in devices {% templatetag closeblock %}</code></li>
+                    <li><code>{% templatetag openblock %} for iface in device.interfaces.all {% templatetag closeblock %}</code></li>
+                    <li><code>{% templatetag openblock %} for c in device.contacts.all {% templatetag closeblock %}</code></li>
+                    <li><code>{{ '{{' }} c.contact.name {{ '}}' }}</code></li>
+                    <li><code>{{ '{{' }} c.contact.phone {{ '}}' }}</code></li>
+                    <li><code>{{ '{{' }} c.role.name {{ '}}' }}</code></li>
+                </ul>
+                <p class="text-muted small mb-2 mt-2">Auto-generated:</p>
+                <ul class="list-unstyled small font-monospace">
+                    <li><code>{{ '{{' }} date {{ '}}' }}</code></li>
+                    <li><code>{{ '{{' }} generated_by {{ '}}' }}</code></li>
+                </ul>
+                <p class="text-muted small mb-2 mt-2">Extra vars (key=value):</p>
+                <ul class="list-unstyled small font-monospace">
+                    <li><code>{{ '{{' }} change_request {{ '}}' }}</code></li>
+                    <li><code>{{ '{{' }} mop_author {{ '}}' }}</code></li>
+                    <li><code>{{ '{{' }} change_window {{ '}}' }}</code></li>
+                    <li><code>{{ '{{' }} approved_by {{ '}}' }}</code></li>
+                    <li><em class="text-muted">…any key you define</em></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="mdi mdi-code-braces"></i> Template Content
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <pre class="p-3 mb-0" style="max-height:600px;overflow-y:auto;font-size:0.8rem;"><code>{{ object.content }}</code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends 'base/layout.html' %}
+
+{% block title %}Delete {{ object.name }}{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'plugins:netbox_atlassian:template_list' %}">Document Library</a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ object.get_absolute_url }}">{{ object.name }}</a>
+        </li>
+        <li class="breadcrumb-item active">Delete</li>
+    </ol>
+</nav>
+
+<div class="card" style="max-width:500px;">
+    <div class="card-header bg-danger text-white">
+        <h5 class="card-title mb-0">
+            <i class="mdi mdi-alert"></i> Confirm Deletion
+        </h5>
+    </div>
+    <div class="card-body">
+        <p>Are you sure you want to delete the template <strong>{{ object }}</strong>?</p>
+        <p class="text-muted small">This action cannot be undone.</p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">
+                <i class="mdi mdi-trash-can-outline"></i> Yes, Delete
+            </button>
+            <a href="{{ object.get_absolute_url }}" class="btn btn-outline-secondary ms-2">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

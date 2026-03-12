@@ -1,0 +1,75 @@
+{% extends 'base/layout.html' %}
+
+{% block title %}Document Library{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0"><i class="mdi mdi-book-open-variant"></i> Document Library</h2>
+    <a href="{% url 'plugins:netbox_atlassian:template_add' %}" class="btn btn-primary btn-sm">
+        <i class="mdi mdi-plus-thick"></i> Add Template
+    </a>
+</div>
+
+{% if total == 0 %}
+<div class="card">
+    <div class="card-body text-center text-muted py-5">
+        <i class="mdi mdi-file-document-outline" style="font-size:3rem;"></i>
+        <p class="mt-2 mb-3">No templates in the library yet.</p>
+        <a href="{% url 'plugins:netbox_atlassian:template_add' %}" class="btn btn-primary">
+            <i class="mdi mdi-plus-thick"></i> Create your first template
+        </a>
+    </div>
+</div>
+{% else %}
+{% for group in groups %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="mdi {{ group.icon }} text-{{ group.color }}"></i>
+            {{ group.label }}
+            <span class="badge text-bg-secondary ms-1">{{ group.templates|length }}</span>
+        </h5>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Last Updated</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for tmpl in group.templates %}
+                <tr>
+                    <td>
+                        <a href="{{ tmpl.get_absolute_url }}">
+                            <strong>{{ tmpl.name }}</strong>
+                        </a>
+                    </td>
+                    <td class="text-muted">{{ tmpl.description|default:"—" }}</td>
+                    <td class="text-muted">{{ tmpl.last_updated|date:"d M Y H:i" }}</td>
+                    <td class="text-end">
+                        <a href="{% url 'plugins:netbox_atlassian:template_generate' tmpl.pk %}"
+                           class="btn btn-sm btn-{{ group.color }}">
+                            <i class="mdi mdi-play"></i> Generate
+                        </a>
+                        <a href="{% url 'plugins:netbox_atlassian:template_edit' tmpl.pk %}"
+                           class="btn btn-sm btn-outline-secondary ms-1">
+                            <i class="mdi mdi-pencil"></i>
+                        </a>
+                        <a href="{% url 'plugins:netbox_atlassian:template_delete' tmpl.pk %}"
+                           class="btn btn-sm btn-outline-danger ms-1">
+                            <i class="mdi mdi-trash-can-outline"></i>
+                        </a>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endfor %}
+{% endif %}
+{% endblock %}

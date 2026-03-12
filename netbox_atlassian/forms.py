@@ -2,7 +2,13 @@
 Forms for NetBox Atlassian Plugin
 """
 
+from dcim.models import Device
 from django import forms
+from netbox.forms import NetBoxModelForm
+from utilities.forms.fields import DynamicModelMultipleChoiceField
+from virtualization.models import VirtualMachine
+
+from .models import DocumentTemplate
 
 
 class AtlassianSettingsForm(forms.Form):
@@ -98,4 +104,51 @@ class AtlassianSettingsForm(forms.Form):
         label="Cache Timeout",
         help_text="Cache timeout in seconds (0 to disable caching)",
         widget=forms.NumberInput(attrs={"class": "form-control"}),
+    )
+
+
+class DocumentTemplateForm(NetBoxModelForm):
+    """Form for creating and editing document templates."""
+
+    content = forms.CharField(
+        widget=forms.Textarea(attrs={"class": "form-control font-monospace", "rows": 25}),
+        help_text=(
+            "Template using Django syntax. Device variables: {{ device.name }}, {{ device.site.name }}, "
+            "{{ device.serial }}, {{ device.role.name }}, {{ device.primary_ip4 }}, "
+            "{{ device.device_type.manufacturer.name }}, {{ device.device_type.model }}. "
+            "Contacts: {% for c in device.contacts.all %}{{ c.contact.name }}{% endfor %}. "
+            "Interfaces: {% for iface in device.interfaces.all %}{{ iface.name }}{% endfor %}. "
+            "Loop devices: {% for device in devices %}...{% endfor %}. "
+            "Extra vars (from generate form): {{ title }}, {{ change_request }}, {{ change_window }}, etc."
+        ),
+    )
+
+    class Meta:
+        model = DocumentTemplate
+        fields = ("name", "document_type", "description", "content", "tags")
+
+
+class DocumentGenerateForm(forms.Form):
+    """Form for selecting devices/VMs and extra variables to generate a document."""
+
+    devices = DynamicModelMultipleChoiceField(
+        queryset=Device.objects.all(),
+        required=False,
+        label="Devices",
+        help_text="Select one or more NetBox devices to populate the template",
+    )
+    virtual_machines = DynamicModelMultipleChoiceField(
+        queryset=VirtualMachine.objects.all(),
+        required=False,
+        label="Virtual Machines",
+        help_text="Select one or more virtual machines to include",
+    )
+    extra_vars = forms.CharField(
+        required=False,
+        label="Extra Variables",
+        help_text=(
+            "Additional template variables, one per line in key=value format. "
+            "Example: change_request=ITSUP-1234, mop_author=John Smith, change_window=24FEB2026 2200"
+        ),
+        widget=forms.Textarea(attrs={"rows": 6, "placeholder": "change_request=ITSUP-1234\nmop_author=John Smith\nchange_window=24FEB2026 2200\napproved_by=Jane Doe\nexpected_duration=30 minutes\nimpact_level=Medium\nrollback_time=15 minutes"}),
     )

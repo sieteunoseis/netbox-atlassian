@@ -1,0 +1,108 @@
+{% extends 'base/layout.html' %}
+{% load form_helpers %}
+
+{% block title %}{% if object %}Edit {{ object.name }}{% else %}Add Template{% endif %}{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'plugins:netbox_atlassian:template_list' %}">Document Library</a>
+        </li>
+        {% if object %}
+        <li class="breadcrumb-item">
+            <a href="{{ object.get_absolute_url }}">{{ object.name }}</a>
+        </li>
+        <li class="breadcrumb-item active">Edit</li>
+        {% else %}
+        <li class="breadcrumb-item active">Add Template</li>
+        {% endif %}
+    </ol>
+</nav>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="mdi mdi-information-outline"></i> Template Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% render_field form.name %}
+                    {% render_field form.document_type %}
+                    {% render_field form.description %}
+                    {% render_field form.tags %}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="mdi mdi-information-outline"></i> Variable Reference
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-1"><strong>Device fields:</strong></p>
+                    <ul class="list-unstyled small font-monospace">
+                        <li>{% templatetag openvariable %} device.name {% templatetag closevariable %}</li>
+                        <li>{% templatetag openvariable %} device.site.name {% templatetag closevariable %}</li>
+                        <li>{% templatetag openvariable %} device.role.name {% templatetag closevariable %}</li>
+                        <li>{% templatetag openvariable %} device.serial {% templatetag closevariable %}</li>
+                        <li>{% templatetag openvariable %} device.primary_ip4 {% templatetag closevariable %}</li>
+                        <li>{% templatetag openvariable %} device.device_type.model {% templatetag closevariable %}</li>
+                        <li>{% templatetag openvariable %} device.device_type.manufacturer.name {% templatetag closevariable %}</li>
+                    </ul>
+                    <p class="text-muted small mb-1 mt-2"><strong>Loops:</strong></p>
+                    <ul class="list-unstyled small font-monospace">
+                        <li>{% templatetag openblock %} for device in devices {% templatetag closeblock %}</li>
+                        <li>{% templatetag openblock %} for iface in device.interfaces.all {% templatetag closeblock %}</li>
+                        <li>{% templatetag openvariable %} iface.name {% templatetag closevariable %}, {% templatetag openvariable %} iface.description {% templatetag closevariable %}</li>
+                        <li>{% templatetag openblock %} for c in device.contacts.all {% templatetag closeblock %}</li>
+                        <li>{% templatetag openvariable %} c.contact.name {% templatetag closevariable %}, {% templatetag openvariable %} c.contact.phone {% templatetag closevariable %}</li>
+                        <li>{% templatetag openvariable %} c.role.name {% templatetag closevariable %}</li>
+                    </ul>
+                    <p class="text-muted small mb-1 mt-2"><strong>Auto-set:</strong></p>
+                    <ul class="list-unstyled small font-monospace">
+                        <li>{% templatetag openvariable %} date {% templatetag closevariable %}, {% templatetag openvariable %} generated_by {% templatetag closevariable %}</li>
+                    </ul>
+                    <p class="text-muted small mb-1 mt-2"><strong>Extra (key=value):</strong></p>
+                    <ul class="list-unstyled small font-monospace">
+                        <li>{% templatetag openvariable %} change_request {% templatetag closevariable %}</li>
+                        <li>{% templatetag openvariable %} mop_author {% templatetag closevariable %}</li>
+                        <li>{% templatetag openvariable %} change_window {% templatetag closevariable %}</li>
+                        <li>{% templatetag openvariable %} approved_by {% templatetag closevariable %}</li>
+                        <li><em class="text-muted">…any key you define</em></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="mdi mdi-code-braces"></i> Template Content
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% render_field form.content %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <button type="submit" class="btn btn-primary">
+            <i class="mdi mdi-content-save"></i> Save
+        </button>
+        {% if object %}
+        <a href="{{ object.get_absolute_url }}" class="btn btn-outline-secondary ms-2">Cancel</a>
+        {% else %}
+        <a href="{% url 'plugins:netbox_atlassian:template_list' %}" class="btn btn-outline-secondary ms-2">Cancel</a>
+        {% endif %}
+    </div>
+</form>
+{% endblock %}
