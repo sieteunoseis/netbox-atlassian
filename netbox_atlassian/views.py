@@ -712,14 +712,25 @@ class DocumentGenerateView(LoginRequiredMixin, View):
         if form.is_valid():
             device_ids = form.cleaned_data.get("devices") or []
             vm_ids = form.cleaned_data.get("virtual_machines") or []
+            selected_tags = form.cleaned_data.get("tag") or []
             extra_vars = _parse_extra_vars(form.cleaned_data.get("extra_vars") or "")
 
-            devices = list(Device.objects.filter(pk__in=[d.pk for d in device_ids]).prefetch_related(
-                "site", "role", "device_type__manufacturer", "interfaces__ip_addresses", "contacts__contact", "contacts__role"
-            ))
-            vms = list(VirtualMachine.objects.filter(pk__in=[v.pk for v in vm_ids]).prefetch_related(
-                "site", "role", "cluster", "interfaces__ip_addresses", "contacts__contact", "contacts__role"
-            ))
+            # If tags selected but no individual devices/VMs, auto-include all matching
+            if selected_tags and not device_ids and not vm_ids:
+                tag_slugs = [t.slug for t in selected_tags]
+                devices = list(Device.objects.filter(tags__slug__in=tag_slugs).distinct().prefetch_related(
+                    "site", "role", "device_type__manufacturer", "interfaces__ip_addresses", "contacts__contact", "contacts__role"
+                ))
+                vms = list(VirtualMachine.objects.filter(tags__slug__in=tag_slugs).distinct().prefetch_related(
+                    "site", "role", "cluster", "interfaces__ip_addresses", "contacts__contact", "contacts__role"
+                ))
+            else:
+                devices = list(Device.objects.filter(pk__in=[d.pk for d in device_ids]).prefetch_related(
+                    "site", "role", "device_type__manufacturer", "interfaces__ip_addresses", "contacts__contact", "contacts__role"
+                ))
+                vms = list(VirtualMachine.objects.filter(pk__in=[v.pk for v in vm_ids]).prefetch_related(
+                    "site", "role", "cluster", "interfaces__ip_addresses", "contacts__contact", "contacts__role"
+                ))
 
             # Combined list — templates use {% for device in devices %} for both
             all_objects = devices + vms
