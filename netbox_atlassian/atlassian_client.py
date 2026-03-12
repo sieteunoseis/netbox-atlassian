@@ -443,7 +443,7 @@ class AtlassianClient:
             # Check tag label matches
             if tag_slugs:
                 page_labels = [
-                    l.get("name", "") for l in
+                    lbl.get("name", "") for lbl in
                     page.get("metadata", {}).get("labels", {}).get("results", [])
                 ]
                 tag_matches = self._find_matched_tags(tag_slugs, page_labels, confluence_prefix)
