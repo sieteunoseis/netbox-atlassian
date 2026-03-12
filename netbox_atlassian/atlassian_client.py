@@ -185,7 +185,7 @@ class AtlassianClient:
             List of matched tag descriptions (e.g., ["Tag: cucm", "Tag: voice-callcontrol"])
         """
         matched = []
-        result_labels_lower = {l.lower() for l in result_labels}
+        result_labels_lower = {lbl.lower() for lbl in result_labels}
         for slug in tag_slugs:
             expected_label = f"{prefix}{slug}".lower()
             if expected_label in result_labels_lower:
@@ -261,7 +261,7 @@ class AtlassianClient:
         jira_prefix = self.config.get("jira_tag_label_prefix", "tuce_")
         if tag_slugs:
             prefixed = [f"{jira_prefix}{s}" for s in tag_slugs]
-            label_list = ", ".join([f'"{l}"' for l in prefixed])
+            label_list = ", ".join([f'"{lbl}"' for lbl in prefixed])
             label_queries.append(f"labels in ({label_list})")
 
         if not text_queries and not label_queries:
@@ -393,7 +393,7 @@ class AtlassianClient:
         confluence_prefix = self.config.get("confluence_tag_label_prefix", "")
         if tag_slugs:
             prefixed = [f"{confluence_prefix}{s}" for s in tag_slugs]
-            label_list = ", ".join([f'"{l}"' for l in prefixed])
+            label_list = ", ".join([f'"{lbl}"' for lbl in prefixed])
             label_queries.append(f"label in ({label_list})")
 
         if not text_queries and not label_queries:
