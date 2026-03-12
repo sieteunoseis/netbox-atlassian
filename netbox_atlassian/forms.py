@@ -4,6 +4,7 @@ Forms for NetBox Atlassian Plugin
 
 from dcim.models import Device
 from django import forms
+from extras.models import Tag
 from netbox.forms import NetBoxModelForm
 from utilities.forms.fields import DynamicModelMultipleChoiceField
 from virtualization.models import VirtualMachine
@@ -131,17 +132,25 @@ class DocumentTemplateForm(NetBoxModelForm):
 class DocumentGenerateForm(forms.Form):
     """Form for selecting devices/VMs and extra variables to generate a document."""
 
+    tag = DynamicModelMultipleChoiceField(
+        queryset=Tag.objects.all(),
+        required=False,
+        label="Filter by Tag",
+        help_text="Select a tag to filter available devices and VMs",
+    )
     devices = DynamicModelMultipleChoiceField(
         queryset=Device.objects.all(),
         required=False,
         label="Devices",
         help_text="Select one or more NetBox devices to populate the template",
+        query_params={"tag": "$tag"},
     )
     virtual_machines = DynamicModelMultipleChoiceField(
         queryset=VirtualMachine.objects.all(),
         required=False,
         label="Virtual Machines",
         help_text="Select one or more virtual machines to include",
+        query_params={"tag": "$tag"},
     )
     extra_vars = forms.CharField(
         required=False,

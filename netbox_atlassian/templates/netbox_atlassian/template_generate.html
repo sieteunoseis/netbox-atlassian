@@ -33,16 +33,9 @@
 
                 <form method="post" id="generate-form">
                     {% csrf_token %}
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Devices</label>
-                        {{ form.devices }}
-                        <div class="form-text">Physical devices from DCIM.</div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Virtual Machines</label>
-                        {{ form.virtual_machines }}
-                        <div class="form-text">VMs from Virtualization. Combined with devices above into the <code>devices</code> loop.</div>
-                    </div>
+                    {% render_field form.tag %}
+                    {% render_field form.devices %}
+                    {% render_field form.virtual_machines %}
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Extra Variables</label>
                         {{ form.extra_vars }}
