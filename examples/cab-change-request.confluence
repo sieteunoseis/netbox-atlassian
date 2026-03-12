@@ -1,0 +1,70 @@
+h1. Change Advisory Board Request
+
+|| Field || Value || Field || Value ||
+| Change Request # | {{ change_request|default:"(CHG-XXXXXX)" }} | Submitted By | {{ submitted_by|default:"(Name)" }} |
+| Change Type | {{ change_type|default:"(Normal/Standard/Emergency)" }} | Priority | {{ priority|default:"(Low/Medium/High)" }} |
+| Requested Window | {{ change_window|default:"(DDMONYYYY HHMM)" }} | Duration | {{ expected_duration|default:"(X minutes)" }} |
+| Impact | {{ impact_level|default:"(Low/Medium/High)" }} | Risk | {{ risk_level|default:"(Low/Medium/High)" }} |
+
+----
+
+h2. 1. Description of Change
+
+{{ description|default:"(Describe what is being changed and why.)" }}
+
+----
+
+h2. 2. Business Justification
+
+{{ justification|default:"(Explain the business need driving this change.)" }}
+
+----
+
+h2. 3. Affected Systems
+
+|| Device || Site || Role || Model || Primary IP ||
+{% for device in devices %}| {{ device.name }} | {{ device.site.name }} | {{ device.role.name }} | {% if device.device_type %}{{ device.device_type.manufacturer.name }} {{ device.device_type.model }}{% endif %} | {{ device.primary_ip4|default:"N/A" }} |
+{% endfor %}
+
+----
+
+h2. 4. Risk Assessment
+
+|| Risk || Likelihood || Impact || Mitigation ||
+| Service disruption | (Low/Med/High) | (Low/Med/High) | (Mitigation) |
+| Rollback required | (Low/Med/High) | (Low/Med/High) | (Mitigation) |
+
+----
+
+h2. 5. Implementation Plan (Summary)
+
+* [ ] Step 1 — (Description)
+* [ ] Step 2 — (Description)
+* [ ] Step 3 — (Description)
+
+----
+
+h2. 6. Rollback Plan
+
+* [ ] Rollback Step 1 — (Description)
+* [ ] Rollback Step 2 — (Description)
+* [ ] Estimated rollback time: {{ rollback_time|default:"(X minutes)" }}
+
+----
+
+h2. 7. Communications Plan
+
+* Notify: (Stakeholders)
+* Method: (Email / Teams / Phone)
+* Timing: (Before / During / After change)
+
+----
+
+h2. 8. CAB Decision
+
+|| Decision || Date || Approved By || Notes ||
+| (Approved / Rejected / Deferred) | (Date) | (Name) | (Notes) |
+
+----
+
+_Generated: {{ date }} by {{ generated_by }}_

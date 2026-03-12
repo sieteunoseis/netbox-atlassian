@@ -1,0 +1,77 @@
+h1. Statement of Work — {{ title|default:"(Project Title)" }}
+
+|| Field || Value ||
+| Project # | {{ project_number|default:"(Project Number)" }} |
+| Prepared By | {{ prepared_by|default:"(Author)" }} |
+| Date | {{ date }} |
+| Version | {{ version|default:"1.0" }} |
+| Approved By | {{ approved_by|default:"(Approver)" }} |
+
+----
+
+h2. 1. Project Overview
+
+{{ overview|default:"(Describe the scope and purpose of the work.)" }}
+
+----
+
+h2. 2. Scope of Work
+
+h3. In Scope
+
+* (Item 1)
+* (Item 2)
+
+h3. Out of Scope
+
+* (Item 1)
+* (Item 2)
+
+----
+
+h2. 3. Affected Devices
+
+{% for device in devices %}
+h3. {{ device.name }}
+
+|| Field || Value ||
+| Site | {{ device.site.name }} |
+| Role | {{ device.role.name }} |
+{% if device.device_type %}| Model | {{ device.device_type.manufacturer.name }} {{ device.device_type.model }} |
+{% endif %}{% if device.serial %}| Serial Number | {{ device.serial }} |
+{% endif %}| Primary IP | {{ device.primary_ip4|default:"N/A" }} |
+{% endfor %}
+
+----
+
+h2. 4. Deliverables
+
+* (Deliverable 1)
+* (Deliverable 2)
+
+----
+
+h2. 5. Timeline
+
+|| Milestone || Target Date ||
+| (Milestone 1) | (Date) |
+| (Milestone 2) | (Date) |
+| Project Complete | (Date) |
+
+----
+
+h2. 6. Assumptions & Dependencies
+
+* (Assumption 1)
+* (Assumption 2)
+
+----
+
+h2. 7. Acceptance Criteria
+
+* (Criterion 1)
+* (Criterion 2)
+
+----
+
+_Generated: {{ date }} by {{ generated_by }}_

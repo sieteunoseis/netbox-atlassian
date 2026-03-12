@@ -1,0 +1,71 @@
+h1. Decommission Plan — {{ title|default:"(System/Device Name)" }}
+
+|| Field || Value || Field || Value ||
+| Change Request # | {{ change_request|default:"(CHG-XXXXXX)" }} | Author | {{ mop_author|default:"(Author)" }} |
+| Change Window | {{ change_window|default:"(DDMONYYYY HHMM)" }} | Approved By | {{ approved_by|default:"(Approver)" }} |
+| Expected Duration | {{ expected_duration|default:"(X hours)" }} | Impact Level | {{ impact_level|default:"(Low/Medium/High)" }} |
+
+----
+
+h2. 1. Overview
+
+{{ overview|default:"(Describe what is being decommissioned and why.)" }}
+
+----
+
+h2. 2. Personnel & Responsibilities
+
+|| Role || Name || Contact ||
+{% for c in unique_contacts %}| {{ c.role.name|default:"(Role)" }} | {{ c.contact.name }} | {{ c.contact.phone|default:"N/A" }} |
+{% endfor %}
+
+----
+
+h2. 3. Systems to Decommission
+
+|| Device || Site || Role || Model || Primary IP || Dependencies ||
+{% for device in devices %}| {{ device.name }} | {{ device.site.name }} | {{ device.role.name }} | {% if device.device_type %}{{ device.device_type.manufacturer.name }} {{ device.device_type.model }}{% endif %} | {{ device.primary_ip4|default:"N/A" }} | (List dependencies) |
+{% endfor %}
+
+----
+
+h2. 4. Pre-Decommission Checklist
+
+* [ ] Confirm no active users or services depend on these systems
+* [ ] Final configuration backup taken
+{% for device in devices %}* [ ] Backup taken for {{ device.name }}
+{% endfor %}* [ ] DNS records identified for removal
+* [ ] Monitoring alerts identified for removal
+* [ ] IP addresses identified for release
+* [ ] License reclamation identified (if applicable)
+
+----
+
+h2. 5. Decommission Steps
+
+{% for device in devices %}
+h3. {{ device.name }}
+
+* [ ] Disable monitoring alerts
+* [ ] Gracefully shut down services
+* [ ] Power off / disconnect
+* [ ] Remove DNS records
+* [ ] Release IP address ({{ device.primary_ip4|default:"N/A" }})
+* [ ] Update inventory (NetBox status → Decommissioning)
+{% endfor %}
+
+----
+
+h2. 6. Post-Decommission Tasks
+
+* [ ] Verify no impact to dependent systems
+* [ ] Remove from monitoring
+* [ ] Remove from backup schedules
+* [ ] Update network diagrams
+* [ ] Update documentation and asset records
+* [ ] Notify stakeholders of completion
+* [ ] Schedule physical hardware removal (if applicable)
+
+----
+
+_Generated: {{ date }} by {{ generated_by }}_

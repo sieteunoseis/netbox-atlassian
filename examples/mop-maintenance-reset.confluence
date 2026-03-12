@@ -1,0 +1,30 @@
+h1. Maintenance Reset — {{ title|default:"(System Name)" }}
+
+|| Field || Value ||
+| AOD | {{ aod|default:"(On-call name)" }} |
+| Change Request # | {{ change_request|default:"(CHG-XXXXXX)" }} |
+| Start | {{ start_time|default:"(HH:MM)" }} |
+| Date | {{ date }} |
+
+----
+
+h2. Reset Schedule
+
+|| Device || Reset Method || Monitor / Ack Method || IP || Time ||
+{% for device in devices %}| {{ device.name }} | {{ reset_method|default:"(os/admin gui/cli)" }} | {{ monitor_method|default:"(icmp/admin gui)" }} | {{ device.primary_ip4|default:"N/A" }} | |
+{% endfor %}| all remaining devices | (method) | (method) | | |
+
+----
+
+h2. Post-Reset Verification
+
+{% for device in devices %}* [ ] {{ device.name }} — verified up and healthy
+{% endfor %}
+
+----
+
+*All Clear:* (time)
+
+----
+
+_Generated: {{ date }} by {{ generated_by }}_

@@ -1,0 +1,148 @@
+h1. Method of Procedure — {{ title|default:"(System Upgrade Title)" }}
+
+h2. Change Summary
+
+|| Field || Value || Field || Value ||
+| Change Request # | {{ change_request|default:"(CHG-XXXXXX)" }} | MOP Author | {{ mop_author|default:"(Author)" }} |
+| Change Window | {{ change_window|default:"(DDMONYYYY HHMM)" }} | Approved By | {{ approved_by|default:"(Approver Name)" }} |
+| Expected Duration | {{ expected_duration|default:"(X hours)" }} | Impact Level | {{ impact_level|default:"(Low/Medium/High)" }} |
+| Rollback Time | {{ rollback_time|default:"(X minutes)" }} | Rollback Deadline | {{ rollback_deadline|default:"(HHMM)" }} |
+
+----
+
+h2. 1. Definitions
+
+|| Acronym || Definition ||
+| (ACRONYM) | (Definition) |
+
+----
+
+h2. 2. Overview
+
+{{ overview|default:"(Describe the upgrade scope, current version, target version, and business justification.)" }}
+
+----
+
+h2. 3. Personnel & Responsibilities
+
+|| Role || Name || Contact || Location ||
+{% for c in unique_contacts %}| {{ c.role.name|default:"(Role)" }} | {{ c.contact.name }} | {{ c.contact.phone|default:"N/A" }} | (On-site / Remote) |
+{% endfor %}
+
+----
+
+h2. 4. Project Phases
+
+|| Phase || Description || Owner || Target Date ||
+| Phase 1 | (Pre-upgrade preparation) | (Owner) | (Date) |
+| Phase 2 | (Upgrade execution) | (Owner) | (Date) |
+| Phase 3 | (Post-upgrade validation) | (Owner) | (Date) |
+
+----
+
+h2. 5. Target Systems
+
+|| Device || Site || Role || Current Version || Target Version || Primary IP ||
+{% for device in devices %}| {{ device.name }} | {{ device.site.name }} | {{ device.role.name }} | (Current) | (Target) | {{ device.primary_ip4|default:"N/A" }} |
+{% endfor %}
+
+----
+
+h2. 6. Prerequisites
+
+* [ ] Maintenance window approved and scheduled
+* [ ] Vendor TAC case opened (case #: )
+* [ ] Upgrade files downloaded and verified (checksum match)
+* [ ] Configuration backups taken for all target systems
+{% for device in devices %}* [ ] Backup taken for {{ device.name }}
+{% endfor %}* [ ] Rollback procedure documented and reviewed
+* [ ] Stakeholders notified of upcoming change
+
+----
+
+h2. 7. Pre-Upgrade Tasks
+
+* [ ] Verify all target systems are healthy and reachable
+{% for device in devices %}* [ ] Verify {{ device.name }} — {{ device.primary_ip4|default:"N/A" }}
+{% endfor %}* [ ] Upload upgrade files to target systems
+* [ ] Confirm no active alarms or incidents
+* [ ] Confirm change freeze exceptions (if applicable)
+
+----
+
+h2. 8. Communications
+
+* [ ] Notify operations center of change start — *_5 minutes_*
+* [ ] Notify application owners — *_5 minutes_*
+* [ ] Notify monitoring team to suppress alerts — *_5 minutes_*
+* [ ] Post status update to (channel/bridge) — *_2 minutes_*
+
+----
+
+h2. 9. Upgrade Steps
+
+{% for device in devices %}
+h3. {{ device.name }}
+
+* [ ] Step 1 — (Pre-upgrade check) — *_X minutes_*
+* [ ] Step 2 — (Apply upgrade) — *_X minutes_*
+* [ ] Step 3 — (Verify upgrade version) — *_X minutes_*
+* [ ] Step 4 — (Reboot/restart if required) — *_X minutes_*
+* [ ] Step 5 — (Verify services restored) — *_X minutes_*
+{% endfor %}
+
+----
+
+h2. 10. Post-Upgrade Validation
+
+* [ ] Verify all systems on target version
+* [ ] Run functional test suite
+{% for device in devices %}* [ ] Validate {{ device.name }} functionality
+{% endfor %}* [ ] Confirm monitoring shows healthy status
+* [ ] Remove alert suppression
+* [ ] Notify operations center of change completion
+
+----
+
+h2. 11. Rollback Plan
+
+If the upgrade must be rolled back:
+
+* [ ] Determine rollback trigger criteria
+{% for device in devices %}* [ ] Rollback {{ device.name }} to previous version — *_X minutes_*
+{% endfor %}* [ ] Verify rollback successful on all systems
+* [ ] Notify stakeholders of rollback
+* [ ] Open incident ticket for investigation
+
+Estimated rollback time: {{ rollback_time|default:"(X minutes)" }}
+
+----
+
+h2. 12. Closeout
+
+h3. Lessons Learned
+
+* (Summary of unknowns encountered)
+* (Changes made to the work plan during execution)
+* (Process improvements identified)
+
+h3. Disaster Recovery Plan Review
+
+* [ ] Existing DR Plan Reviewed
+* [ ] DR Plan — No Changes Needed
+* [ ] DR Plan — Changes Confirmed and Updated
+
+h3. System Diagram Review
+
+* [ ] System Diagram(s) Reviewed
+* [ ] Diagrams — No Changes Needed
+* [ ] Diagrams — Changes Confirmed and Updated
+
+h3. Additional Follow-Up Work
+
+* (Follow-up item 1)
+* (Follow-up item 2)
+
+----
+
+_Generated: {{ date }} by {{ generated_by }}_

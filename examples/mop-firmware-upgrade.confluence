@@ -1,0 +1,78 @@
+h1. Firmware Upgrade — {{ title|default:"(Device Type / Platform)" }}
+
+|| Field || Value || Field || Value ||
+| Change Request # | {{ change_request|default:"(CHG-XXXXXX)" }} | Author | {{ mop_author|default:"(Author)" }} |
+| Change Window | {{ change_window|default:"(DDMONYYYY HHMM)" }} | Approved By | {{ approved_by|default:"(Approver)" }} |
+| Current Version | {{ current_version|default:"(X.Y.Z)" }} | Target Version | {{ target_version|default:"(X.Y.Z)" }} |
+| Expected Duration | {{ expected_duration|default:"(X minutes per device)" }} | Rollback Time | {{ rollback_time|default:"(X minutes)" }} |
+
+----
+
+h2. 1. Overview
+
+{{ overview|default:"(Describe the firmware upgrade scope and business justification.)" }}
+
+h3. Release Notes Summary
+
+* (Key fix or feature 1)
+* (Key fix or feature 2)
+* (Known issues in target version)
+
+----
+
+h2. 2. Target Devices
+
+|| Device || Site || Role || Current FW || Primary IP ||
+{% for device in devices %}| {{ device.name }} | {{ device.site.name }} | {{ device.role.name }} | (Current) | {{ device.primary_ip4|default:"N/A" }} |
+{% endfor %}
+
+----
+
+h2. 3. Prerequisites
+
+* [ ] Firmware image downloaded and checksum verified
+* [ ] Release notes reviewed for known issues
+* [ ] Vendor TAC case opened (if applicable): (case #)
+* [ ] Lab testing completed (if applicable)
+{% for device in devices %}* [ ] Configuration backup taken for {{ device.name }}
+{% endfor %}
+
+----
+
+h2. 4. Upgrade Procedure
+
+{% for device in devices %}
+h3. {{ device.name }} ({{ device.primary_ip4|default:"N/A" }})
+
+* [ ] Upload firmware image — *_X minutes_*
+* [ ] Verify image integrity — *_2 minutes_*
+* [ ] Set boot variable to new image — *_1 minute_*
+* [ ] Reload device — *_X minutes_*
+* [ ] Verify device comes back online — *_X minutes_*
+* [ ] Confirm firmware version matches target — *_1 minute_*
+* [ ] Run post-upgrade health checks — *_X minutes_*
+{% endfor %}
+
+----
+
+h2. 5. Post-Upgrade Validation
+
+{% for device in devices %}* [ ] {{ device.name }} — firmware version confirmed
+* [ ] {{ device.name }} — services operational
+{% endfor %}* [ ] No new alarms or errors in monitoring
+* [ ] Stakeholders notified of completion
+
+----
+
+h2. 6. Rollback Plan
+
+If the upgrade fails on any device:
+
+* [ ] Boot to previous firmware image
+* [ ] Verify device recovers on previous version
+* [ ] Open incident ticket for investigation
+* [ ] Notify stakeholders
+
+----
+
+_Generated: {{ date }} by {{ generated_by }}_
