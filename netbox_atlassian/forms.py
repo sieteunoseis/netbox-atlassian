@@ -143,14 +143,14 @@ class DocumentGenerateForm(forms.Form):
         required=False,
         label="Devices",
         help_text="Select one or more NetBox devices to populate the template",
-        query_params={"tag": "$tag"},
+        query_params={"tag_id": "$tag"},
     )
     virtual_machines = DynamicModelMultipleChoiceField(
         queryset=VirtualMachine.objects.all(),
         required=False,
         label="Virtual Machines",
         help_text="Select one or more virtual machines to include",
-        query_params={"tag": "$tag"},
+        query_params={"tag_id": "$tag"},
     )
     extra_vars = forms.CharField(
         required=False,
