@@ -1,0 +1,101 @@
+{toc}
+
+|| Field || Value || Field || Value ||
+| Project / Incident | {{ project_name|default:"(Project or Incident Name)" }} | Author | {{ lessons_author|default:"(Author)" }} |
+| Date Range | {{ date_range|default:"(Start Date – End Date)" }} | Review Date | {{ date }} |
+| Category | {{ category|default:"(Project/Incident/Maintenance/Upgrade)" }} | Status | {{ review_status|default:"(Draft/Final)" }} |
+
+----
+
+h2. 1. Summary
+
+{{ summary|default:"(Brief overview of the project, incident, or activity being reviewed. What was the goal and what was the outcome?)" }}
+
+----
+
+h2. 2. Affected Systems
+
+|| Device || Site || Role || Model || Primary IP ||
+{% for device in devices %}| {{ device.name }} | {{ device.site.name }} | {{ device.role.name }} | {% if device.device_type %}{{ device.device_type.manufacturer.name }} {{ device.device_type.model }}{% endif %} | {{ device.primary_ip4|default:"N/A" }} |
+{% endfor %}
+
+----
+
+h2. 3. What Went Well
+
+|| # || Item || Details ||
+| 1 | (Item) | (What worked and why — be specific so it can be repeated) |
+| 2 | (Item) | (Details) |
+| 3 | (Item) | (Details) |
+
+----
+
+h2. 4. What Could Be Improved
+
+|| # || Item || Details || Suggested Improvement ||
+| 1 | (Item) | (What didn't go well and why) | (How to improve next time) |
+| 2 | (Item) | (Details) | (Improvement) |
+| 3 | (Item) | (Details) | (Improvement) |
+
+----
+
+h2. 5. Key Decisions Made
+
+|| Decision || Rationale || Outcome ||
+| (Decision 1) | (Why this was chosen) | (Result — good/bad/neutral) |
+| (Decision 2) | (Rationale) | (Outcome) |
+
+----
+
+h2. 6. Risks Encountered
+
+|| Risk || Was It Anticipated? || Impact || How It Was Handled ||
+| (Risk 1) | (Yes/No) | (Low/Medium/High) | (Mitigation taken) |
+| (Risk 2) | (Yes/No) | (Impact) | (Mitigation) |
+
+----
+
+h2. 7. Action Items
+
+|| # || Action Item || Owner || Target Date || Status ||
+| 1 | (Action item — process, documentation, tooling, or training improvement) | (Owner) | (Date) | (Open/In Progress/Complete) |
+| 2 | (Action item) | (Owner) | (Date) | (Status) |
+| 3 | (Action item) | (Owner) | (Date) | (Status) |
+
+----
+
+h2. 8. Recommendations
+
+* (Recommendation 1 — changes to process, tooling, or documentation)
+* (Recommendation 2 — training or knowledge sharing needs)
+* (Recommendation 3 — infrastructure or monitoring improvements)
+
+----
+
+h2. 9. Personnel Involved
+
+|| Role || Name || Contact ||
+{% for c in unique_contacts %}| {{ c.role.name|default:"(Role)" }} | {{ c.contact.name }} | {{ c.contact.phone|default:"N/A" }} |
+{% endfor %}
+
+----
+
+h2. 10. Closeout
+
+h3. Disaster Recovery Plan Review
+
+* [ ] Existing DR Plan Reviewed
+* [ ] Existing DR Plan — No Changes Needed
+* [ ] Existing DR Plan — Changes Confirmed
+* DR Plan Link: [IT Disaster Recovery|https://ohsuitg.sharepoint.com/:f:/s/IT.OHSUDisasterRecovery/IgANiz5aqoEySZ1kXz3MMO8iAW6pPnPAh0NSuqyH1NQh4e4]
+* Summary of changes: (INSERT SUMMARY HERE)
+
+h3. System Diagram Review
+
+* [ ] System Diagram(s) Reviewed
+* [ ] Diagrams — No Changes Needed
+* [ ] Diagrams — Changes Confirmed and Updated
+
+----
+
+_Generated: {{ date }} by {{ generated_by }}_

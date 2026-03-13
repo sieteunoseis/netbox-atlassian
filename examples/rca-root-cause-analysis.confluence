@@ -1,0 +1,126 @@
+{toc}
+
+|| Field || Value || Field || Value ||
+| Incident # | {{ incident_number|default:"(INC-XXXXXX)" }} | RCA Author | {{ rca_author|default:"(Author)" }} |
+| Incident Date | {{ incident_date|default:"(DDMONYYYY HHMM)" }} | RCA Date | {{ date }} |
+| Duration | {{ incident_duration|default:"(X hours X minutes)" }} | Severity | {{ severity|default:"(P1/P2/P3/P4)" }} |
+| Impact | {{ impact_level|default:"(Low/Medium/High/Critical)" }} | Status | {{ rca_status|default:"(Draft/Final)" }} |
+
+----
+
+h2. 1. Incident Summary
+
+{{ incident_summary|default:"(Brief description of the incident — what happened, when it was detected, and when service was restored.)" }}
+
+----
+
+h2. 2. Timeline of Events
+
+|| Time || Event || Source ||
+| (HH:MM) | (Incident detected / alert fired) | (Monitoring / User report) |
+| (HH:MM) | (Initial response / triage began) | (On-call engineer) |
+| (HH:MM) | (Root cause identified) | (Investigation) |
+| (HH:MM) | (Fix applied / service restored) | (Engineer) |
+| (HH:MM) | (Incident closed) | (Change ticket) |
+
+----
+
+h2. 3. Affected Systems
+
+|| Device || Site || Role || Model || Primary IP ||
+{% for device in devices %}| {{ device.name }} | {{ device.site.name }} | {{ device.role.name }} | {% if device.device_type %}{{ device.device_type.manufacturer.name }} {{ device.device_type.model }}{% endif %} | {{ device.primary_ip4|default:"N/A" }} |
+{% endfor %}
+
+----
+
+h2. 4. Impact Assessment
+
+{{ impact_assessment|default:"(Describe who and what was affected — users, services, sites, call volumes, etc.)" }}
+
+|| Category || Details ||
+| Users affected | (Number / groups affected) |
+| Services affected | (List of affected services) |
+| Sites affected | (List of affected sites) |
+| Duration of impact | (Total user-facing downtime) |
+
+----
+
+h2. 5. Root Cause
+
+{{ root_cause|default:"(Describe the root cause of the incident. Be specific — include the technical failure, configuration error, or external factor that triggered the event.)" }}
+
+----
+
+h2. 6. Contributing Factors
+
+* (Contributing factor 1 — e.g., lack of monitoring, missing redundancy)
+* (Contributing factor 2 — e.g., outdated firmware, documentation gap)
+* (Contributing factor 3 — e.g., process not followed, insufficient testing)
+
+----
+
+h2. 7. Resolution
+
+{{ resolution|default:"(Describe the steps taken to resolve the incident and restore service.)" }}
+
+----
+
+h2. 8. Corrective Actions
+
+|| # || Action Item || Owner || Target Date || Status ||
+| 1 | (Action item description) | (Owner) | (Date) | (Open/In Progress/Complete) |
+| 2 | (Action item description) | (Owner) | (Date) | (Open/In Progress/Complete) |
+| 3 | (Action item description) | (Owner) | (Date) | (Open/In Progress/Complete) |
+
+----
+
+h2. 9. Preventive Measures
+
+* [ ] (Monitoring improvement — describe)
+* [ ] (Process change — describe)
+* [ ] (Documentation update — describe)
+* [ ] (Training or knowledge share — describe)
+* [ ] (Infrastructure change — describe)
+
+----
+
+h2. 10. Personnel Involved
+
+|| Role || Name || Contact ||
+{% for c in unique_contacts %}| {{ c.role.name|default:"(Role)" }} | {{ c.contact.name }} | {{ c.contact.phone|default:"N/A" }} |
+{% endfor %}
+
+----
+
+h2. 11. Communications
+
+|| Contact || Method || Number / Channel || When ||
+| AOD (OHSU) | Phone | Campus Operators 503-494-8311 or direct 503-494-8105 | 15 min before start, at completion |
+| AOC (HMC) | Phone | 503-681-1255 | Before start, at completion |
+| NOC | Teams | NOC group chat | Before start, at completion |
+| Operators | Teams | Operator group chat | Before start, at completion |
+| ED Comm Center | Teams | ED Comm Center group chat | Before start, at completion |
+| Poison Center | Teams | Poison Center group chat | Before start, at completion |
+| Public Safety Dept | Teams | Public Safety Dept group chat | Before start, at completion |
+
+----
+
+h2. 12. Closeout
+
+h3. Disaster Recovery Plan Review
+
+* [ ] Existing DR Plan Reviewed
+* [ ] Existing DR Plan — No Changes Needed
+* [ ] Existing DR Plan — Changes Confirmed
+* DR Plan Link: [IT Disaster Recovery|https://ohsuitg.sharepoint.com/:f:/s/IT.OHSUDisasterRecovery/IgANiz5aqoEySZ1kXz3MMO8iAW6pPnPAh0NSuqyH1NQh4e4]
+* Summary of changes: (INSERT SUMMARY HERE)
+
+h3. System Diagram Review
+
+* [ ] System Diagram(s) Reviewed
+* [ ] Diagrams — No Changes Needed
+* [ ] Diagrams — Changes Confirmed and Updated
+
+----
+
+_Generated: {{ date }} by {{ generated_by }}_

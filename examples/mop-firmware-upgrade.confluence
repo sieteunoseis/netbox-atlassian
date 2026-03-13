@@ -75,7 +75,49 @@ If the upgrade fails on any device:
 
 ----
 
-h2. 7. Closeout
+h2. 7. Communications
+
+|| Contact || Method || Number / Channel || When ||
+| AOD (OHSU) | Phone | Campus Operators 503-494-8311 or direct 503-494-8105 | 15 min before start, at completion |
+| AOC (HMC) | Phone | 503-681-1255 | Before start, at completion |
+| NOC | Teams | NOC group chat | Before start, at completion |
+| Operators | Teams | Operator group chat | Before start, at completion |
+| ED Comm Center | Teams | ED Comm Center group chat | Before start, at completion |
+| Poison Center | Teams | Poison Center group chat | Before start, at completion |
+| Public Safety Dept | Teams | Public Safety Dept group chat | Before start, at completion |
+
+* [ ] AOD contacted 15 minutes prior to start
+* [ ] AOC notified
+* [ ] NOC notified
+* [ ] Operators notified
+* [ ] ED Comm Center notified
+* [ ] Poison Center notified
+* [ ] Public Safety Dept notified
+* [ ] All parties notified of completion
+
+{expand:AOD Email Template}
+Subject: Reminder: Scheduled Phone System Maintenance this Weekend
+
+Greetings,
+
+We have a phone system maintenance window scheduled between (DAY DATE START TIME) to (DAY DATE END TIME).
+
+Please see the attached flyer for more information.
+
+Per our standard operating procedure we will contact the AOD 15 minutes prior to starting our work to ensure the hospital is reasonably quiet. We will notify the AOD when the work is completed.
+
+The EOC will be opening at (TIME).
+
+Please let us know if you have any questions or concerns.
+
+Thank you,
+
+TUCE
+{expand}
+
+----
+
+h2. 8. Closeout
 
 h3. Lessons Learned
 
@@ -88,7 +130,7 @@ h3. Disaster Recovery Plan Review
 * [ ] Existing DR Plan Reviewed
 * [ ] Existing DR Plan — No Changes Needed
 * [ ] Existing DR Plan — Changes Confirmed
-* DR Plan Link: (INSERT LINK HERE)
+* DR Plan Link: [IT Disaster Recovery|https://ohsuitg.sharepoint.com/:f:/s/IT.OHSUDisasterRecovery/IgANiz5aqoEySZ1kXz3MMO8iAW6pPnPAh0NSuqyH1NQh4e4]
 * Summary of changes: (INSERT SUMMARY HERE)
 
 h3. System Diagram Review
