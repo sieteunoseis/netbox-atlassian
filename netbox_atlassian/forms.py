@@ -172,5 +172,5 @@ class DocumentGenerateForm(forms.Form):
             "Additional template variables, one per line in key=value format. "
             "Example: change_request=ITSUP-1234, mop_author=John Smith, change_window=24FEB2026 2200"
         ),
-        widget=forms.Textarea(attrs={"rows": 6, "placeholder": "change_request=ITSUP-1234\nmop_author=John Smith\nchange_window=24FEB2026 2200\napproved_by=Jane Doe\nexpected_duration=30 minutes\nimpact_level=Medium\nrollback_time=15 minutes"}),
+        widget=forms.Textarea(attrs={"rows": 6, "style": "resize:none;", "placeholder": "change_request=ITSUP-1234\nmop_author=John Smith\nchange_window=24FEB2026 2200\napproved_by=Jane Doe\nexpected_duration=30 minutes\nimpact_level=Medium\nrollback_time=15 minutes"}),
     )
