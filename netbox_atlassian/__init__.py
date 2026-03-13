@@ -9,7 +9,7 @@ import logging
 
 from netbox.plugins import PluginConfig
 
-__version__ = "0.5.6"
+__version__ = "0.5.7"
 
 logger = logging.getLogger(__name__)
 
