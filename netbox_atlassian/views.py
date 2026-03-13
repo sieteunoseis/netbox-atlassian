@@ -859,6 +859,8 @@ class DocumentGenerateView(LoginRequiredMixin, View):
             # Handle "Post to Confluence" action
             confluence_url = None
             if rendered and request.POST.get("action") == "post_to_confluence":
+                # Use edited content from textarea if provided, otherwise use rendered
+                post_body = request.POST.get("edited_content", "").strip() or rendered
                 if template.confluence_parent_page_id and template.confluence_space_key:
                     client = get_client()
                     page_title = request.POST.get("confluence_title", "").strip()
@@ -867,7 +869,7 @@ class DocumentGenerateView(LoginRequiredMixin, View):
                     result = client.create_confluence_page(
                         space_key=template.confluence_space_key,
                         title=page_title,
-                        body=rendered,
+                        body=post_body,
                         parent_id=template.confluence_parent_page_id,
                     )
                     if result["success"]:

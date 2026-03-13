@@ -111,8 +111,8 @@
                 </button>
             </div>
             <div class="card-body p-0">
-                <textarea id="output-text" class="form-control font-monospace border-0 rounded-0"
-                          rows="30" readonly
+                <textarea id="output-text" name="edited_content" class="form-control font-monospace border-0 rounded-0"
+                          rows="30"
                           style="resize:none; font-size:0.8rem;">{{ rendered }}</textarea>
             </div>
             {% if object.confluence_parent_page_id %}
@@ -189,6 +189,16 @@ if (cfForm) {
             hidden.type = 'hidden';
             hidden.name = pair[0];
             hidden.value = pair[1];
+            hidden.className = 'copied-field';
+            cfForm.appendChild(hidden);
+        }
+        // Include the (possibly edited) output content
+        var edited = document.getElementById('output-text');
+        if (edited) {
+            var hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'edited_content';
+            hidden.value = edited.value;
             hidden.className = 'copied-field';
             cfForm.appendChild(hidden);
         }

@@ -112,7 +112,7 @@ class DocumentTemplateForm(NetBoxModelForm):
     """Form for creating and editing document templates."""
 
     content = forms.CharField(
-        widget=forms.Textarea(attrs={"class": "form-control font-monospace", "rows": 25, "style": "resize:none;"}),
+        widget=forms.Textarea(attrs={"class": "form-control font-monospace border-0 rounded-0", "rows": 25, "style": "resize:none; font-size:0.8rem;"}),
         help_text=(
             "Template using Django syntax. Device variables: {{ device.name }}, {{ device.site.name }}, "
             "{{ device.serial }}, {{ device.role.name }}, {{ device.primary_ip4 }}, "
