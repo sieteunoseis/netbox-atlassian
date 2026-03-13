@@ -687,6 +687,34 @@ def _parse_extra_vars(raw: str) -> dict:
     return result
 
 
+# Variables automatically provided by the generate view (not user-settable)
+_AUTO_VARS = frozenset({
+    "devices", "device", "unique_contacts", "date", "generated_by",
+})
+
+# Regex to find {{ var_name|default:"placeholder" }} patterns
+_EXTRA_VAR_RE = re.compile(
+    r"\{\{\s*(\w+)\s*\|default:\"([^\"]*)\"\s*\}\}"
+)
+
+
+def _extract_extra_vars(content: str) -> list[dict]:
+    """Extract user-settable extra variables from template content.
+
+    Returns a list of dicts with 'name' and 'placeholder' keys,
+    excluding auto-provided variables (devices, date, etc.).
+    """
+    seen = set()
+    result = []
+    for match in _EXTRA_VAR_RE.finditer(content):
+        var_name = match.group(1)
+        placeholder = match.group(2)
+        if var_name not in _AUTO_VARS and var_name not in seen:
+            seen.add(var_name)
+            result.append({"name": var_name, "placeholder": placeholder})
+    return result
+
+
 class DocumentGenerateView(LoginRequiredMixin, View):
     """Select devices and extra variables, then render a template."""
 
@@ -700,6 +728,7 @@ class DocumentGenerateView(LoginRequiredMixin, View):
                 "object": template,
                 "form": form,
                 "rendered": None,
+                "extra_var_hints": _extract_extra_vars(template.content),
             },
         )
 
@@ -820,5 +849,6 @@ class DocumentGenerateView(LoginRequiredMixin, View):
                 "rendered": rendered,
                 "error": error,
                 "confluence_url": confluence_url,
+                "extra_var_hints": _extract_extra_vars(template.content),
             },
         )

@@ -43,6 +43,36 @@
                             One per line: <code>key=value</code><br>
                             e.g. <code>change_request=ITSUP-1234</code>
                         </div>
+                        {% if extra_var_hints %}
+                        <div class="mt-2">
+                            <a class="text-decoration-none small" data-bs-toggle="collapse"
+                               href="#varReference" role="button" aria-expanded="false"
+                               aria-controls="varReference">
+                                <i class="mdi mdi-information-outline"></i> Available variables for this template
+                            </a>
+                            <div class="collapse mt-1" id="varReference">
+                                <div class="card card-body p-2" style="font-size:0.78rem; max-height:300px; overflow-y:auto;">
+                                    <table class="table table-sm table-hover mb-0">
+                                        <thead>
+                                            <tr><th>Variable</th><th>Default</th></tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for v in extra_var_hints %}
+                                            <tr>
+                                                <td><code>{{ v.name }}</code></td>
+                                                <td class="text-muted">{{ v.placeholder }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary mt-1"
+                                            onclick="fillExampleVars()">
+                                        <i class="mdi mdi-playlist-plus"></i> Fill all as examples
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
                     <button type="submit" name="action" value="generate" class="btn btn-primary w-100">
                         <i class="mdi mdi-play"></i> Generate Document
@@ -114,6 +144,17 @@
 </div>
 
 <script>
+function fillExampleVars() {
+    var textarea = document.getElementById('id_extra_vars');
+    if (!textarea) return;
+    var lines = [];
+    {% for v in extra_var_hints %}
+    lines.push('{{ v.name }}=');
+    {% endfor %}
+    textarea.value = lines.join('\n');
+    textarea.focus();
+}
+
 function copyOutput() {
     const textarea = document.getElementById('output-text');
     textarea.select();
