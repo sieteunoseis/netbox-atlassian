@@ -9,7 +9,7 @@ import logging
 
 from netbox.plugins import PluginConfig
 
-__version__ = "0.5.5"
+__version__ = "0.5.6"
 
 logger = logging.getLogger(__name__)
 
@@ -118,6 +118,11 @@ class AtlassianConfig(PluginConfig):
         # Useful for management/escalation contacts that aren't assigned to devices.
         # Empty list = no static management contacts.
         "management_contact_groups": [],
+        # Extra variable names that auto-resolve to Contact objects.
+        # When a user enters e.g. project_manager=Jane Smith in extra variables,
+        # the plugin looks up the Contact by name and provides the full object
+        # so templates can use {{ project_manager.name }}, {{ project_manager.email }}, etc.
+        "contact_lookup_variables": ["project_manager"],
     }
 
     def ready(self):

@@ -828,6 +828,16 @@ class DocumentGenerateView(LoginRequiredMixin, View):
             else:
                 management_contacts = []
 
+            # Resolve contact lookup variables (e.g., project_manager=Jane Smith → Contact object)
+            contact_lookup_vars = set(
+                plugin_config.get("contact_lookup_variables", ["project_manager"])
+            )
+            for var_name in list(extra_vars):
+                if var_name in contact_lookup_vars and extra_vars[var_name]:
+                    contact = Contact.objects.filter(name__iexact=extra_vars[var_name]).first()
+                    if contact:
+                        extra_vars[var_name] = contact
+
             context = {
                 "devices": all_objects,
                 "device": all_objects[0] if all_objects else None,

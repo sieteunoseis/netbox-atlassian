@@ -1,11 +1,9 @@
 {toc}
 
-|| Field || Value ||
-| Project # | {{ project_number|default:"(Project Number)" }} |
-| Prepared By | {{ prepared_by|default:"(Author)" }} |
-| Date | {{ date }} |
-| Version | {{ version|default:"1.0" }} |
-| Approved By | {{ approved_by|default:"(Approver)" }} |
+|| Field || Value || Field || Value ||
+| Project # | {{ project_number|default:"(Project Number)" }} | Prepared By | {{ prepared_by|default:"(Author)" }} |
+| Date | {{ date }} | Version | {{ version|default:"1.0" }} |
+| Approved By | {{ approved_by|default:"(Approver)" }} | Project Manager | {% if project_manager %}{{ project_manager.name }} ({{ project_manager.email|default:"N/A" }}){% else %}{{ project_manager_name|default:"(N/A)" }}{% endif %} |
 
 ----
 

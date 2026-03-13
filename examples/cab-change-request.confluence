@@ -5,6 +5,7 @@
 | Change Type | {{ change_type|default:"(Normal/Standard/Emergency)" }} | Priority | {{ priority|default:"(Low/Medium/High)" }} |
 | Requested Window | {{ change_window|default:"(DDMONYYYY HHMM)" }} | Duration | {{ expected_duration|default:"(X minutes)" }} |
 | Impact | {{ impact_level|default:"(Low/Medium/High)" }} | Risk | {{ risk_level|default:"(Low/Medium/High)" }} |
+| Project Manager | {% if project_manager %}{{ project_manager.name }} ({{ project_manager.email|default:"N/A" }}){% else %}{{ project_manager_name|default:"(N/A)" }}{% endif %} | | |
 
 ----
 

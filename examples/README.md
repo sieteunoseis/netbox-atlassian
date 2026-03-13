@@ -42,6 +42,20 @@ Pass any additional variables in the Generate form. Common examples:
 - `change_window=15MAR2026 0200`
 - `approved_by=John Doe`
 - `expected_duration=2 hours`
+- `project_manager=Jane Smith` — see Contact Lookup Variables below
+
+### Contact Lookup Variables
+Variables listed in the `contact_lookup_variables` setting (default: `["project_manager"]`) are automatically resolved from NetBox Contacts by name. When a user enters `project_manager=Jane Smith`, the plugin looks up the Contact named "Jane Smith" and provides the full Contact object, so templates can use:
+```
+{{ project_manager.name }}
+{{ project_manager.title }}
+{{ project_manager.email }}
+{{ project_manager.phone }}
+```
+If no matching Contact is found, the raw string value is used instead. To add custom lookup variables, update the setting:
+```python
+"contact_lookup_variables": ["project_manager", "technical_lead", "sponsor"],
+```
 
 ### Device Fields
 - `{{ device.name }}`, `{{ device.site.name }}`, `{{ device.role.name }}`
