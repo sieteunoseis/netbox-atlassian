@@ -8,7 +8,21 @@
 
 ----
 
-h2. 1. Overview
+h2. 1. Personnel & Responsibilities
+
+|| Role || Name || Title || Phone || Email ||
+{% for c in team_contacts %}| {{ c.role.name|default:"(Role)" }} | {{ c.contact.name }} | {{ c.contact.title|default:"" }} | {{ c.contact.phone|default:"N/A" }} | {{ c.contact.email|default:"N/A" }} |
+{% endfor %}
+{% if management_contacts %}
+h3. Management Escalation
+
+|| Name || Title || Phone || Email ||
+{% for m in management_contacts %}| {{ m.name }} | {{ m.title|default:"" }} | {{ m.phone|default:"N/A" }} | {{ m.email|default:"N/A" }} |
+{% endfor %}{% endif %}
+
+----
+
+h2. 2. Overview
 
 {{ overview|default:"(Describe the firmware upgrade scope and business justification.)" }}
 
@@ -20,7 +34,7 @@ h3. Release Notes Summary
 
 ----
 
-h2. 2. Target Devices
+h2. 3. Target Devices
 
 || Device || Site || Role || Current FW || Primary IP ||
 {% for device in devices %}| {{ device.name }} | {{ device.site.name }} | {{ device.role.name }} | (Current) | {{ device.primary_ip4|default:"N/A" }} |
@@ -28,7 +42,7 @@ h2. 2. Target Devices
 
 ----
 
-h2. 3. Prerequisites
+h2. 4. Prerequisites
 
 * [ ] Firmware image downloaded and checksum verified
 * [ ] Release notes reviewed for known issues
@@ -39,7 +53,7 @@ h2. 3. Prerequisites
 
 ----
 
-h2. 4. Upgrade Procedure
+h2. 5. Upgrade Procedure
 
 {% for device in devices %}
 h3. {{ device.name }} ({{ device.primary_ip4|default:"N/A" }})
@@ -55,7 +69,7 @@ h3. {{ device.name }} ({{ device.primary_ip4|default:"N/A" }})
 
 ----
 
-h2. 5. Post-Upgrade Validation
+h2. 6. Post-Upgrade Validation
 
 {% for device in devices %}* [ ] {{ device.name }} — firmware version confirmed
 * [ ] {{ device.name }} — services operational
@@ -64,7 +78,17 @@ h2. 5. Post-Upgrade Validation
 
 ----
 
-h2. 6. Rollback Plan
+h2. 7. Vendor Support
+{% if vendor_contacts %}
+|| Vendor || Contact || Phone || Email || Details ||
+{% for vc in vendor_contacts %}| {% for g in vc.contact.groups.all %}{{ g.name }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %} | {{ vc.contact.name }} | {{ vc.contact.phone|default:"N/A" }} | {{ vc.contact.email|default:"N/A" }} | {% if vc.contact.link %}[Support Portal|{{ vc.contact.link }}]{% endif %} {{ vc.contact.comments|default:"" }} |
+{% endfor %}{% else %}
+(No vendor support contacts assigned to selected devices.)
+{% endif %}
+
+----
+
+h2. 8. Rollback Plan
 
 If the upgrade fails on any device:
 
@@ -75,49 +99,19 @@ If the upgrade fails on any device:
 
 ----
 
-h2. 7. Communications
+h2. 9. Communications
 
 || Contact || Method || Number / Channel || When ||
-| AOD (OHSU) | Phone | Campus Operators 503-494-8311 or direct 503-494-8105 | 15 min before start, at completion |
-| AOC (HMC) | Phone | 503-681-1255 | Before start, at completion |
-| NOC | Teams | NOC group chat | Before start, at completion |
-| Operators | Teams | Operator group chat | Before start, at completion |
-| ED Comm Center | Teams | ED Comm Center group chat | Before start, at completion |
-| Poison Center | Teams | Poison Center group chat | Before start, at completion |
-| Public Safety Dept | Teams | Public Safety Dept group chat | Before start, at completion |
+| (Contact 1) | (Phone / Email / Chat) | (Number or channel) | (When to notify) |
+| (Contact 2) | (Phone / Email / Chat) | (Number or channel) | (When to notify) |
 
-* [ ] AOD contacted 15 minutes prior to start
-* [ ] AOC notified
-* [ ] NOC notified
-* [ ] Operators notified
-* [ ] ED Comm Center notified
-* [ ] Poison Center notified
-* [ ] Public Safety Dept notified
+* [ ] (Contact 1) notified before start
+* [ ] (Contact 2) notified before start
 * [ ] All parties notified of completion
-
-{expand:AOD Email Template}
-Subject: Reminder: Scheduled Phone System Maintenance this Weekend
-
-Greetings,
-
-We have a phone system maintenance window scheduled between (DAY DATE START TIME) to (DAY DATE END TIME).
-
-Please see the attached flyer for more information.
-
-Per our standard operating procedure we will contact the AOD 15 minutes prior to starting our work to ensure the hospital is reasonably quiet. We will notify the AOD when the work is completed.
-
-The EOC will be opening at (TIME).
-
-Please let us know if you have any questions or concerns.
-
-Thank you,
-
-TUCE
-{expand}
 
 ----
 
-h2. 8. Closeout
+h2. 10. Closeout
 
 h3. Lessons Learned
 
@@ -130,7 +124,7 @@ h3. Disaster Recovery Plan Review
 * [ ] Existing DR Plan Reviewed
 * [ ] Existing DR Plan — No Changes Needed
 * [ ] Existing DR Plan — Changes Confirmed
-* DR Plan Link: [IT Disaster Recovery|https://ohsuitg.sharepoint.com/:f:/s/IT.OHSUDisasterRecovery/IgANiz5aqoEySZ1kXz3MMO8iAW6pPnPAh0NSuqyH1NQh4e4]
+* DR Plan Link: (Link to DR plan)
 * Summary of changes: (INSERT SUMMARY HERE)
 
 h3. System Diagram Review

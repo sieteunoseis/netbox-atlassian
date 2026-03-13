@@ -13,6 +13,8 @@ These `.confluence` files are example templates for the Document Library feature
 | `mop-decommission.confluence` | Device/system decommission plan |
 | `sow-project.confluence` | Statement of work for project scoping |
 | `cab-change-request.confluence` | Change Advisory Board request with risk assessment |
+| `rca-root-cause-analysis.confluence` | Root cause analysis for incidents |
+| `lessons-learned.confluence` | Lessons learned review for projects and incidents |
 
 ## How to Use
 
@@ -26,7 +28,10 @@ These `.confluence` files are example templates for the Document Library feature
 ### Auto-populated
 - `{{ devices }}` — list of selected devices and VMs
 - `{{ device }}` — first selected device (for single-device templates)
-- `{{ unique_contacts }}` — deduplicated contacts across all selected devices
+- `{{ unique_contacts }}` — all deduplicated contacts across all selected devices
+- `{{ team_contacts }}` — internal team only (excludes roles listed in `vendor_contact_roles` setting)
+- `{{ vendor_contacts }}` — contacts whose role slug is in `vendor_contact_roles` setting
+- `{{ management_contacts }}` — contacts from groups listed in `management_contact_groups` setting (included regardless of device assignments)
 - `{{ date }}` — current date (e.g., `12MAR2026`)
 - `{{ generated_by }}` — current NetBox user
 
@@ -48,7 +53,16 @@ Pass any additional variables in the Generate form. Common examples:
 ```
 {% for device in devices %}...{% endfor %}
 {% for iface in device.interfaces.all %}...{% endfor %}
+{% for c in team_contacts %}{{ c.contact.name }} — {{ c.contact.title }}{% endfor %}
+{% for vc in vendor_contacts %}{{ vc.contact.name }} — {{ vc.contact.phone }}{% endfor %}
+{% for m in management_contacts %}{{ m.name }} — {{ m.title }}{% endfor %}
 {% for c in unique_contacts %}{{ c.contact.name }}{% endfor %}
+```
+
+### Management Contacts
+Note: `management_contacts` are `Contact` objects (not `ContactAssignment`), so fields are accessed directly:
+```
+{% for m in management_contacts %}{{ m.name }} — {{ m.title }} — {{ m.phone }} — {{ m.email }}{% endfor %}
 ```
 
 ### Conditional Fields (for VM compatibility)

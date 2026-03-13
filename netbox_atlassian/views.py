@@ -10,6 +10,7 @@ import datetime
 import re
 
 from dcim.models import Device
+from tenancy.models import Contact, ContactGroup
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
@@ -689,7 +690,8 @@ def _parse_extra_vars(raw: str) -> dict:
 
 # Variables automatically provided by the generate view (not user-settable)
 _AUTO_VARS = frozenset({
-    "devices", "device", "unique_contacts", "date", "generated_by",
+    "devices", "device", "unique_contacts", "vendor_contacts", "team_contacts",
+    "management_contacts", "date", "generated_by",
 })
 
 # Regex to find {{ var_name|default:"placeholder" }} patterns
@@ -800,10 +802,39 @@ class DocumentGenerateView(LoginRequiredMixin, View):
                         seen_contact_ids.add(assignment.contact_id)
                         unique_contacts.append(assignment)
 
+            # Split contacts into vendor vs internal team using configurable roles
+            plugin_config = settings.PLUGINS_CONFIG.get("netbox_atlassian", {})
+            vendor_role_slugs = frozenset(
+                plugin_config.get("vendor_contact_roles", ["technical-support"])
+            )
+
+            vendor_contacts = [
+                a for a in unique_contacts
+                if a.role and a.role.slug in vendor_role_slugs
+            ]
+            team_contacts = [
+                a for a in unique_contacts
+                if not a.role or a.role.slug not in vendor_role_slugs
+            ]
+
+            # Static management contacts — always included from configured groups
+            mgmt_group_slugs = plugin_config.get("management_contact_groups", [])
+            if mgmt_group_slugs:
+                management_contacts = list(
+                    Contact.objects.filter(
+                        groups__slug__in=mgmt_group_slugs,
+                    ).distinct().order_by("name")
+                )
+            else:
+                management_contacts = []
+
             context = {
                 "devices": all_objects,
                 "device": all_objects[0] if all_objects else None,
                 "unique_contacts": unique_contacts,
+                "vendor_contacts": vendor_contacts,
+                "team_contacts": team_contacts,
+                "management_contacts": management_contacts,
                 "date": datetime.date.today().strftime("%d%b%Y").upper(),
                 "generated_by": request.user.get_full_name() or request.user.username,
             }

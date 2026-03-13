@@ -9,7 +9,7 @@ import logging
 
 from netbox.plugins import PluginConfig
 
-__version__ = "0.5.4"
+__version__ = "0.5.5"
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +90,7 @@ class AtlassianConfig(PluginConfig):
         # General settings
         "timeout": 30,
         "cache_timeout": 300,  # Cache results for 5 minutes
-        # Enable legacy SSL renegotiation for older servers (required for OHSU wiki)
+        # Enable legacy SSL renegotiation for older servers
         "enable_legacy_ssl": False,
         # Device type filtering (like catalyst-center)
         # Empty list = show tab for all devices
@@ -99,7 +99,7 @@ class AtlassianConfig(PluginConfig):
         # Search Jira/Confluence by device tag labels in addition to text search
         "search_by_tags": True,
         # Prefix for Jira labels (enterprise Jira may require a prefix)
-        "jira_tag_label_prefix": "tuce_",
+        "jira_tag_label_prefix": "",
         # Prefix for Confluence labels (usually no prefix needed)
         "confluence_tag_label_prefix": "",
         # Tags to exclude from label search (generic tags that return too many results)
@@ -107,6 +107,17 @@ class AtlassianConfig(PluginConfig):
             "production", "lab", "web", "sql", "publisher", "subscriber",
             "side-a", "side-b", "vitalqip-sync",
         ],
+        # Contact role slugs treated as "vendor" contacts in document templates.
+        # These are separated into {{ vendor_contacts }} and excluded from {{ team_contacts }}.
+        # Matches NetBox ContactRole slugs. Empty list = no vendor/team split.
+        "vendor_contact_roles": [
+            "technical-support", "account-manager", "sales-rep", "customer-success",
+        ],
+        # Contact group slugs whose members always appear in {{ management_contacts }}
+        # in generated documents, regardless of device selection.
+        # Useful for management/escalation contacts that aren't assigned to devices.
+        # Empty list = no static management contacts.
+        "management_contact_groups": [],
     }
 
     def ready(self):

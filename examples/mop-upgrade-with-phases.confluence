@@ -25,9 +25,15 @@ h2. 2. Overview
 
 h2. 3. Personnel & Responsibilities
 
-|| Role || Name || Contact || Location ||
-{% for c in unique_contacts %}| {{ c.role.name|default:"(Role)" }} | {{ c.contact.name }} | {{ c.contact.phone|default:"N/A" }} | (On-site / Remote) |
+|| Role || Name || Title || Phone || Email ||
+{% for c in team_contacts %}| {{ c.role.name|default:"(Role)" }} | {{ c.contact.name }} | {{ c.contact.title|default:"" }} | {{ c.contact.phone|default:"N/A" }} | {{ c.contact.email|default:"N/A" }} |
 {% endfor %}
+{% if management_contacts %}
+h3. Management Escalation
+
+|| Name || Title || Phone || Email ||
+{% for m in management_contacts %}| {{ m.name }} | {{ m.title|default:"" }} | {{ m.phone|default:"N/A" }} | {{ m.email|default:"N/A" }} |
+{% endfor %}{% endif %}
 
 ----
 
@@ -70,49 +76,29 @@ h2. 7. Pre-Upgrade Tasks
 
 ----
 
-h2. 8. Communications
-
-|| Contact || Method || Number / Channel || When ||
-| AOD (OHSU) | Phone | Campus Operators 503-494-8311 or direct 503-494-8105 | 15 min before start, at completion |
-| AOC (HMC) | Phone | 503-681-1255 | Before start, at completion |
-| NOC | Teams | NOC group chat | Before start, at completion |
-| Operators | Teams | Operator group chat | Before start, at completion |
-| ED Comm Center | Teams | ED Comm Center group chat | Before start, at completion |
-| Poison Center | Teams | Poison Center group chat | Before start, at completion |
-| Public Safety Dept | Teams | Public Safety Dept group chat | Before start, at completion |
-
-* [ ] AOD contacted 15 minutes prior to start
-* [ ] AOC notified
-* [ ] NOC notified
-* [ ] Operators notified
-* [ ] ED Comm Center notified
-* [ ] Poison Center notified
-* [ ] Public Safety Dept notified
-* [ ] All parties notified of completion
-
-{expand:AOD Email Template}
-Subject: Reminder: Scheduled Phone System Maintenance this Weekend
-
-Greetings,
-
-We have a phone system maintenance window scheduled between (DAY DATE START TIME) to (DAY DATE END TIME).
-
-Please see the attached flyer for more information.
-
-Per our standard operating procedure we will contact the AOD 15 minutes prior to starting our work to ensure the hospital is reasonably quiet. We will notify the AOD when the work is completed.
-
-The EOC will be opening at (TIME).
-
-Please let us know if you have any questions or concerns.
-
-Thank you,
-
-TUCE
-{expand}
+h2. 8. Vendor Support
+{% if vendor_contacts %}
+|| Vendor || Contact || Phone || Email || Details ||
+{% for vc in vendor_contacts %}| {% for g in vc.contact.groups.all %}{{ g.name }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %} | {{ vc.contact.name }} | {{ vc.contact.phone|default:"N/A" }} | {{ vc.contact.email|default:"N/A" }} | {% if vc.contact.link %}[Support Portal|{{ vc.contact.link }}]{% endif %} {{ vc.contact.comments|default:"" }} |
+{% endfor %}{% else %}
+(No vendor support contacts assigned to selected devices.)
+{% endif %}
 
 ----
 
-h2. 9. Upgrade Steps
+h2. 9. Communications
+
+|| Contact || Method || Number / Channel || When ||
+| (Contact 1) | (Phone / Email / Chat) | (Number or channel) | (When to notify) |
+| (Contact 2) | (Phone / Email / Chat) | (Number or channel) | (When to notify) |
+
+* [ ] (Contact 1) notified before start
+* [ ] (Contact 2) notified before start
+* [ ] All parties notified of completion
+
+----
+
+h2. 10. Upgrade Steps
 
 {% for device in devices %}
 h3. {{ device.name }}
@@ -126,7 +112,7 @@ h3. {{ device.name }}
 
 ----
 
-h2. 10. Post-Upgrade Validation
+h2. 11. Post-Upgrade Validation
 
 * [ ] Verify all systems on target version
 * [ ] Run functional test suite
@@ -137,7 +123,7 @@ h2. 10. Post-Upgrade Validation
 
 ----
 
-h2. 11. Rollback Plan
+h2. 12. Rollback Plan
 
 If the upgrade must be rolled back:
 
@@ -151,7 +137,7 @@ Estimated rollback time: {{ rollback_time|default:"(X minutes)" }}
 
 ----
 
-h2. 12. Closeout
+h2. 13. Closeout
 
 h3. Lessons Learned
 
@@ -164,7 +150,7 @@ h3. Disaster Recovery Plan Review
 * [ ] Existing DR Plan Reviewed
 * [ ] Existing DR Plan — No Changes Needed
 * [ ] Existing DR Plan — Changes Confirmed
-* DR Plan Link: [IT Disaster Recovery|https://ohsuitg.sharepoint.com/:f:/s/IT.OHSUDisasterRecovery/IgANiz5aqoEySZ1kXz3MMO8iAW6pPnPAh0NSuqyH1NQh4e4]
+* DR Plan Link: (Link to DR plan)
 * Summary of changes: (INSERT SUMMARY HERE)
 
 h3. System Diagram Review

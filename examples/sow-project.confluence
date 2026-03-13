@@ -60,7 +60,21 @@ h2. 6. Assumptions & Dependencies
 
 ----
 
-h2. 7. Acceptance Criteria
+h2. 7. Project Team
+
+|| Role || Name || Title || Phone || Email ||
+{% for c in team_contacts %}| {{ c.role.name|default:"(Role)" }} | {{ c.contact.name }} | {{ c.contact.title|default:"" }} | {{ c.contact.phone|default:"N/A" }} | {{ c.contact.email|default:"N/A" }} |
+{% endfor %}
+{% if management_contacts %}
+h3. Management Escalation
+
+|| Name || Title || Phone || Email ||
+{% for m in management_contacts %}| {{ m.name }} | {{ m.title|default:"" }} | {{ m.phone|default:"N/A" }} | {{ m.email|default:"N/A" }} |
+{% endfor %}{% endif %}
+
+----
+
+h2. 8. Acceptance Criteria
 
 * (Criterion 1)
 * (Criterion 2)

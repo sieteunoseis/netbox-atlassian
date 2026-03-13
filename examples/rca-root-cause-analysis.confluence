@@ -86,22 +86,23 @@ h2. 9. Preventive Measures
 
 h2. 10. Personnel Involved
 
-|| Role || Name || Contact ||
-{% for c in unique_contacts %}| {{ c.role.name|default:"(Role)" }} | {{ c.contact.name }} | {{ c.contact.phone|default:"N/A" }} |
+|| Role || Name || Title || Phone || Email ||
+{% for c in team_contacts %}| {{ c.role.name|default:"(Role)" }} | {{ c.contact.name }} | {{ c.contact.title|default:"" }} | {{ c.contact.phone|default:"N/A" }} | {{ c.contact.email|default:"N/A" }} |
 {% endfor %}
+{% if management_contacts %}
+h3. Management Escalation
+
+|| Name || Title || Phone || Email ||
+{% for m in management_contacts %}| {{ m.name }} | {{ m.title|default:"" }} | {{ m.phone|default:"N/A" }} | {{ m.email|default:"N/A" }} |
+{% endfor %}{% endif %}
 
 ----
 
 h2. 11. Communications
 
 || Contact || Method || Number / Channel || When ||
-| AOD (OHSU) | Phone | Campus Operators 503-494-8311 or direct 503-494-8105 | 15 min before start, at completion |
-| AOC (HMC) | Phone | 503-681-1255 | Before start, at completion |
-| NOC | Teams | NOC group chat | Before start, at completion |
-| Operators | Teams | Operator group chat | Before start, at completion |
-| ED Comm Center | Teams | ED Comm Center group chat | Before start, at completion |
-| Poison Center | Teams | Poison Center group chat | Before start, at completion |
-| Public Safety Dept | Teams | Public Safety Dept group chat | Before start, at completion |
+| (Contact 1) | (Phone / Email / Chat) | (Number or channel) | (When to notify) |
+| (Contact 2) | (Phone / Email / Chat) | (Number or channel) | (When to notify) |
 
 ----
 
@@ -112,7 +113,7 @@ h3. Disaster Recovery Plan Review
 * [ ] Existing DR Plan Reviewed
 * [ ] Existing DR Plan — No Changes Needed
 * [ ] Existing DR Plan — Changes Confirmed
-* DR Plan Link: [IT Disaster Recovery|https://ohsuitg.sharepoint.com/:f:/s/IT.OHSUDisasterRecovery/IgANiz5aqoEySZ1kXz3MMO8iAW6pPnPAh0NSuqyH1NQh4e4]
+* DR Plan Link: (Link to DR plan)
 * Summary of changes: (INSERT SUMMARY HERE)
 
 h3. System Diagram Review

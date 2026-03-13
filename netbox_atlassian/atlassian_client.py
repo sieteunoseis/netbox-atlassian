@@ -22,7 +22,7 @@ class LegacySSLAdapter(HTTPAdapter):
     """
     HTTP Adapter that enables legacy SSL renegotiation.
 
-    Required for older servers (like OHSU Confluence) that don't support
+    Required for older servers that don't support
     secure renegotiation.
     """
 
@@ -179,7 +179,7 @@ class AtlassianClient:
         Args:
             tag_slugs: List of tag slugs to check
             result_labels: List of labels from the Jira/Confluence result
-            prefix: Label prefix (e.g., "tuce_" for Jira)
+            prefix: Label prefix for matching (configured per integration)
 
         Returns:
             List of matched tag descriptions (e.g., ["Tag: cucm", "Tag: voice-callcontrol"])
@@ -258,7 +258,7 @@ class AtlassianClient:
 
         # Build label query for tags
         label_queries = []
-        jira_prefix = self.config.get("jira_tag_label_prefix", "tuce_")
+        jira_prefix = self.config.get("jira_tag_label_prefix", "")
         if tag_slugs:
             prefixed = [f"{jira_prefix}{s}" for s in tag_slugs]
             label_list = ", ".join([f'"{lbl}"' for lbl in prefixed])

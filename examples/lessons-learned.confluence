@@ -74,9 +74,15 @@ h2. 8. Recommendations
 
 h2. 9. Personnel Involved
 
-|| Role || Name || Contact ||
-{% for c in unique_contacts %}| {{ c.role.name|default:"(Role)" }} | {{ c.contact.name }} | {{ c.contact.phone|default:"N/A" }} |
+|| Role || Name || Title || Phone || Email ||
+{% for c in team_contacts %}| {{ c.role.name|default:"(Role)" }} | {{ c.contact.name }} | {{ c.contact.title|default:"" }} | {{ c.contact.phone|default:"N/A" }} | {{ c.contact.email|default:"N/A" }} |
 {% endfor %}
+{% if management_contacts %}
+h3. Management Escalation
+
+|| Name || Title || Phone || Email ||
+{% for m in management_contacts %}| {{ m.name }} | {{ m.title|default:"" }} | {{ m.phone|default:"N/A" }} | {{ m.email|default:"N/A" }} |
+{% endfor %}{% endif %}
 
 ----
 
@@ -87,7 +93,7 @@ h3. Disaster Recovery Plan Review
 * [ ] Existing DR Plan Reviewed
 * [ ] Existing DR Plan — No Changes Needed
 * [ ] Existing DR Plan — Changes Confirmed
-* DR Plan Link: [IT Disaster Recovery|https://ohsuitg.sharepoint.com/:f:/s/IT.OHSUDisasterRecovery/IgANiz5aqoEySZ1kXz3MMO8iAW6pPnPAh0NSuqyH1NQh4e4]
+* DR Plan Link: (Link to DR plan)
 * Summary of changes: (INSERT SUMMARY HERE)
 
 h3. System Diagram Review
