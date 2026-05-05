@@ -6,6 +6,9 @@ from netbox.models import NetBoxModel
 class Atlassian(models.Model):
     """Unmanaged model to register custom permissions for the Atlassian plugin."""
 
+    # Excluded from NetBox's /core/system/ object-count loop; the model has no DB table.
+    _netbox_private = True
+
     class Meta:
         managed = False
         default_permissions = ()
