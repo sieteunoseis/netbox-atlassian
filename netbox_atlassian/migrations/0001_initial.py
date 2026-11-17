@@ -14,9 +14,7 @@ class Migration(migrations.Migration):
             options={
                 "managed": False,
                 "default_permissions": (),
-                "permissions": (
-                    ("configure_atlassian", "Can configure Atlassian plugin settings"),
-                ),
+                "permissions": (("configure_atlassian", "Can configure Atlassian plugin settings"),),
             },
         ),
     ]

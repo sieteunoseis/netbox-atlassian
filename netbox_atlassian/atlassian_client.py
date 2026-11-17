@@ -170,9 +170,7 @@ class AtlassianClient:
 
         return matched_fields
 
-    def _find_matched_tags(
-        self, tag_slugs: list[str], result_labels: list[str], prefix: str = ""
-    ) -> list[str]:
+    def _find_matched_tags(self, tag_slugs: list[str], result_labels: list[str], prefix: str = "") -> list[str]:
         """
         Find which tag slugs matched based on result labels.
 
@@ -225,7 +223,13 @@ class AtlassianClient:
             logger.error(f"Confluence API error: {e}")
             return None
 
-    def search_jira(self, search_terms: list[str], terms_with_fields: dict[str, str], max_results: int = 10, tag_slugs: list[str] = None) -> dict:
+    def search_jira(
+        self,
+        search_terms: list[str],
+        terms_with_fields: dict[str, str],
+        max_results: int = 10,
+        tag_slugs: list[str] = None,
+    ) -> dict:
         """
         Search Jira for issues containing any of the search terms.
 
@@ -356,7 +360,11 @@ class AtlassianClient:
         return response
 
     def search_confluence(
-        self, search_terms: list[str], terms_with_fields: dict[str, str], max_results: int = 10, tag_slugs: list[str] = None
+        self,
+        search_terms: list[str],
+        terms_with_fields: dict[str, str],
+        max_results: int = 10,
+        tag_slugs: list[str] = None,
     ) -> dict:
         """
         Search Confluence for pages containing any of the search terms.
@@ -443,8 +451,7 @@ class AtlassianClient:
             # Check tag label matches
             if tag_slugs:
                 page_labels = [
-                    lbl.get("name", "") for lbl in
-                    page.get("metadata", {}).get("labels", {}).get("results", [])
+                    lbl.get("name", "") for lbl in page.get("metadata", {}).get("labels", {}).get("results", [])
                 ]
                 tag_matches = self._find_matched_tags(tag_slugs, page_labels, confluence_prefix)
                 matched_fields.extend(tag_matches)
@@ -559,9 +566,7 @@ class AtlassianClient:
 
         return re.sub(r"<ul>(.*?)</ul>", _replace_task_list, storage, flags=re.DOTALL)
 
-    def create_confluence_page(
-        self, space_key: str, title: str, body: str, parent_id: str
-    ) -> dict:
+    def create_confluence_page(self, space_key: str, title: str, body: str, parent_id: str) -> dict:
         """
         Create a new Confluence page as a child of the given parent.
 
@@ -581,6 +586,7 @@ class AtlassianClient:
 
         # Step 1: Escape [x] before wiki conversion (Confluence treats it as a link)
         import re as _re
+
         _DONE_PLACEHOLDER = "\u200b\u2611\u200b"  # zero-width space + ballot box + zero-width space
         wiki_body = _re.sub(r"(\* )\[x\] ", rf"\1{_DONE_PLACEHOLDER} ", body)
 

@@ -10,7 +10,6 @@ import datetime
 import re
 
 from dcim.models import Device
-from tenancy.models import Contact, ContactGroup
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
@@ -20,12 +19,16 @@ from django.template import Context, Template
 from django.template.loader import render_to_string
 from django.views import View
 from netbox.views import generic
+from tenancy.models import Contact, ContactGroup
 from utilities.views import ViewTab, register_model_view
 from virtualization.models import VirtualMachine
 
 from .atlassian_client import get_client
 from .forms import AtlassianSettingsForm, DocumentGenerateForm, DocumentTemplateForm
 from .models import DocumentTemplate
+
+# Tab order on object pages; override with PLUGINS_CONFIG["netbox_atlassian"]["tab_weight"]
+TAB_WEIGHT = settings.PLUGINS_CONFIG.get("netbox_atlassian", {}).get("tab_weight", 9000)
 
 # Check if netbox_endpoints plugin is installed
 try:
@@ -169,7 +172,7 @@ class DeviceAtlassianView(generic.ObjectView):
 
     tab = ViewTab(
         label="Atlassian",
-        weight=9000,
+        weight=TAB_WEIGHT,
         permission="dcim.view_device",
         hide_if_empty=False,
     )
@@ -219,8 +222,12 @@ class DeviceAtlassianContentView(LoginRequiredMixin, PermissionRequiredMixin, Vi
             jira_max = config.get("jira_max_results", 10)
             confluence_max = config.get("confluence_max_results", 10)
 
-            jira_results = client.search_jira(search_terms, terms_with_fields, max_results=jira_max, tag_slugs=tag_slugs)
-            confluence_results = client.search_confluence(search_terms, terms_with_fields, max_results=confluence_max, tag_slugs=tag_slugs)
+            jira_results = client.search_jira(
+                search_terms, terms_with_fields, max_results=jira_max, tag_slugs=tag_slugs
+            )
+            confluence_results = client.search_confluence(
+                search_terms, terms_with_fields, max_results=confluence_max, tag_slugs=tag_slugs
+            )
 
         # Get URLs for external links
         jira_url = config.get("jira_url", "").rstrip("/")
@@ -255,7 +262,7 @@ class VirtualMachineAtlassianView(generic.ObjectView):
 
     tab = ViewTab(
         label="Atlassian",
-        weight=9000,
+        weight=TAB_WEIGHT,
         permission="virtualization.view_virtualmachine",
         hide_if_empty=False,
     )
@@ -311,8 +318,12 @@ class VMAtlassianContentView(LoginRequiredMixin, PermissionRequiredMixin, View):
             jira_max = config.get("jira_max_results", 10)
             confluence_max = config.get("confluence_max_results", 10)
 
-            jira_results = client.search_jira(search_terms, terms_with_fields, max_results=jira_max, tag_slugs=tag_slugs)
-            confluence_results = client.search_confluence(search_terms, terms_with_fields, max_results=confluence_max, tag_slugs=tag_slugs)
+            jira_results = client.search_jira(
+                search_terms, terms_with_fields, max_results=jira_max, tag_slugs=tag_slugs
+            )
+            confluence_results = client.search_confluence(
+                search_terms, terms_with_fields, max_results=confluence_max, tag_slugs=tag_slugs
+            )
 
         # Get URLs for external links
         jira_url = config.get("jira_url", "").rstrip("/")
@@ -542,7 +553,9 @@ if ENDPOINTS_PLUGIN_INSTALLED:
                 jira_max = config.get("jira_max_results", 10)
                 confluence_max = config.get("confluence_max_results", 10)
 
-                jira_results = client.search_jira(search_terms, terms_with_fields, max_results=jira_max, tag_slugs=tag_slugs)
+                jira_results = client.search_jira(
+                    search_terms, terms_with_fields, max_results=jira_max, tag_slugs=tag_slugs
+                )
                 confluence_results = client.search_confluence(
                     search_terms, terms_with_fields, max_results=confluence_max, tag_slugs=tag_slugs
                 )
@@ -574,6 +587,7 @@ if ENDPOINTS_PLUGIN_INSTALLED:
 # ---------------------------------------------------------------------------
 # Document Library Views
 # ---------------------------------------------------------------------------
+
 
 class DocumentTemplateListView(LoginRequiredMixin, View):
     """Browse all document templates."""
@@ -689,15 +703,21 @@ def _parse_extra_vars(raw: str) -> dict:
 
 
 # Variables automatically provided by the generate view (not user-settable)
-_AUTO_VARS = frozenset({
-    "devices", "device", "unique_contacts", "vendor_contacts", "team_contacts",
-    "management_contacts", "date", "generated_by",
-})
+_AUTO_VARS = frozenset(
+    {
+        "devices",
+        "device",
+        "unique_contacts",
+        "vendor_contacts",
+        "team_contacts",
+        "management_contacts",
+        "date",
+        "generated_by",
+    }
+)
 
 # Regex to find {{ var_name|default:"placeholder" }} patterns
-_EXTRA_VAR_RE = re.compile(
-    r"\{\{\s*(\w+)\s*\|default:\"([^\"]*)\"\s*\}\}"
-)
+_EXTRA_VAR_RE = re.compile(r"\{\{\s*(\w+)\s*\|default:\"([^\"]*)\"\s*\}\}")
 
 
 def _extract_extra_vars(content: str) -> list[dict]:
@@ -750,19 +770,43 @@ class DocumentGenerateView(LoginRequiredMixin, View):
             # If tags selected but no individual devices/VMs, auto-include all matching
             if selected_tags and not device_ids and not vm_ids:
                 tag_slugs = [t.slug for t in selected_tags]
-                devices = list(Device.objects.filter(tags__slug__in=tag_slugs).distinct().prefetch_related(
-                    "site", "role", "device_type__manufacturer", "interfaces__ip_addresses", "interfaces__cable", "contacts__contact", "contacts__role"
-                ))
-                vms = list(VirtualMachine.objects.filter(tags__slug__in=tag_slugs).distinct().prefetch_related(
-                    "site", "role", "cluster", "interfaces__ip_addresses", "contacts__contact", "contacts__role"
-                ))
+                devices = list(
+                    Device.objects.filter(tags__slug__in=tag_slugs)
+                    .distinct()
+                    .prefetch_related(
+                        "site",
+                        "role",
+                        "device_type__manufacturer",
+                        "interfaces__ip_addresses",
+                        "interfaces__cable",
+                        "contacts__contact",
+                        "contacts__role",
+                    )
+                )
+                vms = list(
+                    VirtualMachine.objects.filter(tags__slug__in=tag_slugs)
+                    .distinct()
+                    .prefetch_related(
+                        "site", "role", "cluster", "interfaces__ip_addresses", "contacts__contact", "contacts__role"
+                    )
+                )
             else:
-                devices = list(Device.objects.filter(pk__in=[d.pk for d in device_ids]).prefetch_related(
-                    "site", "role", "device_type__manufacturer", "interfaces__ip_addresses", "interfaces__cable", "contacts__contact", "contacts__role"
-                ))
-                vms = list(VirtualMachine.objects.filter(pk__in=[v.pk for v in vm_ids]).prefetch_related(
-                    "site", "role", "cluster", "interfaces__ip_addresses", "contacts__contact", "contacts__role"
-                ))
+                devices = list(
+                    Device.objects.filter(pk__in=[d.pk for d in device_ids]).prefetch_related(
+                        "site",
+                        "role",
+                        "device_type__manufacturer",
+                        "interfaces__ip_addresses",
+                        "interfaces__cable",
+                        "contacts__contact",
+                        "contacts__role",
+                    )
+                )
+                vms = list(
+                    VirtualMachine.objects.filter(pk__in=[v.pk for v in vm_ids]).prefetch_related(
+                        "site", "role", "cluster", "interfaces__ip_addresses", "contacts__contact", "contacts__role"
+                    )
+                )
 
             # Combined list — templates use {% for device in devices %} for both
             all_objects = devices + vms
@@ -786,10 +830,12 @@ class DocumentGenerateView(LoginRequiredMixin, View):
                                             "device": peer_device,
                                             "connections": [],
                                         }
-                                    connected[peer_device.pk]["connections"].append({
-                                        "local_interface": iface.name,
-                                        "remote_interface": peer.name,
-                                    })
+                                    connected[peer_device.pk]["connections"].append(
+                                        {
+                                            "local_interface": iface.name,
+                                            "remote_interface": peer.name,
+                                        }
+                                    )
                     obj.active_interfaces = active_ifaces
                     obj.connected_devices = list(connected.values())
 
@@ -804,18 +850,10 @@ class DocumentGenerateView(LoginRequiredMixin, View):
 
             # Split contacts into vendor vs internal team using configurable roles
             plugin_config = settings.PLUGINS_CONFIG.get("netbox_atlassian", {})
-            vendor_role_slugs = frozenset(
-                plugin_config.get("vendor_contact_roles", ["technical-support"])
-            )
+            vendor_role_slugs = frozenset(plugin_config.get("vendor_contact_roles", ["technical-support"]))
 
-            vendor_contacts = [
-                a for a in unique_contacts
-                if a.role and a.role.slug in vendor_role_slugs
-            ]
-            team_contacts = [
-                a for a in unique_contacts
-                if not a.role or a.role.slug not in vendor_role_slugs
-            ]
+            vendor_contacts = [a for a in unique_contacts if a.role and a.role.slug in vendor_role_slugs]
+            team_contacts = [a for a in unique_contacts if not a.role or a.role.slug not in vendor_role_slugs]
 
             # Static management contacts — always included from configured groups
             mgmt_group_slugs = plugin_config.get("management_contact_groups", [])
@@ -823,15 +861,15 @@ class DocumentGenerateView(LoginRequiredMixin, View):
                 management_contacts = list(
                     Contact.objects.filter(
                         groups__slug__in=mgmt_group_slugs,
-                    ).distinct().order_by("name")
+                    )
+                    .distinct()
+                    .order_by("name")
                 )
             else:
                 management_contacts = []
 
             # Resolve contact lookup variables (e.g., project_manager=Jane Smith → Contact object)
-            contact_lookup_vars = set(
-                plugin_config.get("contact_lookup_variables", ["project_manager"])
-            )
+            contact_lookup_vars = set(plugin_config.get("contact_lookup_variables", ["project_manager"]))
             for var_name in list(extra_vars):
                 if var_name in contact_lookup_vars and extra_vars[var_name]:
                     contact = Contact.objects.filter(name__iexact=extra_vars[var_name]).first()
@@ -881,7 +919,9 @@ class DocumentGenerateView(LoginRequiredMixin, View):
                     else:
                         messages.error(request, f"Confluence error: {result['error']}")
                 else:
-                    messages.error(request, "Confluence parent page ID and space key must be configured on this template.")
+                    messages.error(
+                        request, "Confluence parent page ID and space key must be configured on this template."
+                    )
 
         return render(
             request,

@@ -45,7 +45,8 @@ Thank you,
 TUCE
 {expand}"""
 
-RCA_CONTENT = """\
+RCA_CONTENT = (
+    """\
 {toc}
 
 || Field || Value || Field || Value ||
@@ -160,7 +161,9 @@ h3. Disaster Recovery Plan Review
 * [ ] Existing DR Plan Reviewed
 * [ ] Existing DR Plan \u2014 No Changes Needed
 * [ ] Existing DR Plan \u2014 Changes Confirmed
-* DR Plan Link: """ + DR_LINK + """
+* DR Plan Link: """
+    + DR_LINK
+    + """
 * Summary of changes: (INSERT SUMMARY HERE)
 
 h3. System Diagram Review
@@ -172,8 +175,10 @@ h3. System Diagram Review
 ----
 
 _Generated: {{ date }} by {{ generated_by }}_"""
+)
 
-LESSONS_LEARNED_CONTENT = """\
+LESSONS_LEARNED_CONTENT = (
+    """\
 {toc}
 
 || Field || Value || Field || Value ||
@@ -263,7 +268,9 @@ h3. Disaster Recovery Plan Review
 * [ ] Existing DR Plan Reviewed
 * [ ] Existing DR Plan \u2014 No Changes Needed
 * [ ] Existing DR Plan \u2014 Changes Confirmed
-* DR Plan Link: """ + DR_LINK + """
+* DR Plan Link: """
+    + DR_LINK
+    + """
 * Summary of changes: (INSERT SUMMARY HERE)
 
 h3. System Diagram Review
@@ -275,6 +282,7 @@ h3. System Diagram Review
 ----
 
 _Generated: {{ date }} by {{ generated_by }}_"""
+)
 
 
 def add_templates_and_update_existing(apps, schema_editor):
@@ -336,6 +344,7 @@ def add_templates_and_update_existing(apps, schema_editor):
 
         # Find Closeout marker (numbered or unnumbered) and insert Communications before it
         import re
+
         match = re.search(r"h2\.\s*(\d+\.)?\s*Closeout", t.content)
         if not match:
             continue

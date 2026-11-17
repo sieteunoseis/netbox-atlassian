@@ -12,9 +12,7 @@ class Atlassian(models.Model):
     class Meta:
         managed = False
         default_permissions = ()
-        permissions = (
-            ("configure_atlassian", "Can configure Atlassian plugin settings"),
-        )
+        permissions = (("configure_atlassian", "Can configure Atlassian plugin settings"),)
 
 
 class DocumentTemplate(NetBoxModel):

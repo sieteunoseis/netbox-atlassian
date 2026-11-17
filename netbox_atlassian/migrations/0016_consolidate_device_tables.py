@@ -6,9 +6,7 @@ from django.db import migrations
 
 # Old pattern: per-device h3 + detail table + interfaces table
 OLD_DEVICES_PATTERN = re.compile(
-    r"h2\. (?:\d+\. )?Affected Devices\s*\n"
-    r"(.*?)"
-    r"(?=\n----|\nh2\.)",
+    r"h2\. (?:\d+\. )?Affected Devices\s*\n" r"(.*?)" r"(?=\n----|\nh2\.)",
     re.DOTALL,
 )
 
@@ -48,7 +46,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(
-            consolidate_device_tables, reverse_code=migrations.RunPython.noop
-        ),
+        migrations.RunPython(consolidate_device_tables, reverse_code=migrations.RunPython.noop),
     ]

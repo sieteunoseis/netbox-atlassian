@@ -9,7 +9,7 @@ import logging
 
 from netbox.plugins import PluginConfig
 
-__version__ = "0.5.9"
+__version__ = "0.6.0"
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ class AtlassianConfig(PluginConfig):
     """Plugin configuration for NetBox Atlassian integration."""
 
     name = "netbox_atlassian"
-    verbose_name = "NetBox Atlassian"
+    verbose_name = "Atlassian"
     description = "Display Jira issues and Confluence pages related to devices"
     version = __version__
     author = "Jeremy Worden"
@@ -32,6 +32,8 @@ class AtlassianConfig(PluginConfig):
 
     # Default configuration values
     default_settings = {
+        "top_level_menu": True,
+        "tab_weight": 9000,
         # Jira settings (on-prem)
         "jira_url": "",  # e.g., "https://jira.example.com"
         "jira_username": "",
@@ -104,14 +106,24 @@ class AtlassianConfig(PluginConfig):
         "confluence_tag_label_prefix": "",
         # Tags to exclude from label search (generic tags that return too many results)
         "tag_search_exclude": [
-            "production", "lab", "web", "sql", "publisher", "subscriber",
-            "side-a", "side-b", "vitalqip-sync",
+            "production",
+            "lab",
+            "web",
+            "sql",
+            "publisher",
+            "subscriber",
+            "side-a",
+            "side-b",
+            "vitalqip-sync",
         ],
         # Contact role slugs treated as "vendor" contacts in document templates.
         # These are separated into {{ vendor_contacts }} and excluded from {{ team_contacts }}.
         # Matches NetBox ContactRole slugs. Empty list = no vendor/team split.
         "vendor_contact_roles": [
-            "technical-support", "account-manager", "sales-rep", "customer-success",
+            "technical-support",
+            "account-manager",
+            "sales-rep",
+            "customer-success",
         ],
         # Contact group slugs whose members always appear in {{ management_contacts }}
         # in generated documents, regardless of device selection.
@@ -152,7 +164,7 @@ class AtlassianConfig(PluginConfig):
             from netbox_endpoints.models import Endpoint
             from utilities.views import ViewTab, register_model_view
 
-            from .views import should_show_atlassian_tab_endpoint
+            from .views import TAB_WEIGHT, should_show_atlassian_tab_endpoint
 
             @register_model_view(Endpoint, name="atlassian", path="atlassian")
             class EndpointAtlassianView(generic.ObjectView):
@@ -163,7 +175,7 @@ class AtlassianConfig(PluginConfig):
 
                 tab = ViewTab(
                     label="Atlassian",
-                    weight=9000,
+                    weight=TAB_WEIGHT,
                     permission="netbox_endpoints.view_endpoint",
                     hide_if_empty=False,
                     visible=should_show_atlassian_tab_endpoint,

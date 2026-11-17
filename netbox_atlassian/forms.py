@@ -112,7 +112,13 @@ class DocumentTemplateForm(NetBoxModelForm):
     """Form for creating and editing document templates."""
 
     content = forms.CharField(
-        widget=forms.Textarea(attrs={"class": "form-control font-monospace border-0 rounded-0", "rows": 25, "style": "resize:none; font-size:0.8rem;"}),
+        widget=forms.Textarea(
+            attrs={
+                "class": "form-control font-monospace border-0 rounded-0",
+                "rows": 25,
+                "style": "resize:none; font-size:0.8rem;",
+            }
+        ),
         help_text=(
             "Template using Django syntax. Device variables: {{ device.name }}, {{ device.site.name }}, "
             "{{ device.serial }}, {{ device.role.name }}, {{ device.primary_ip4 }}, "
@@ -172,5 +178,11 @@ class DocumentGenerateForm(forms.Form):
             "Additional template variables, one per line in key=value format. "
             "Example: change_request=ITSUP-1234, mop_author=John Smith, change_window=24FEB2026 2200"
         ),
-        widget=forms.Textarea(attrs={"rows": 6, "style": "resize:none;", "placeholder": "change_request=ITSUP-1234\nmop_author=John Smith\nchange_window=24FEB2026 2200\napproved_by=Jane Doe\nexpected_duration=30 minutes\nimpact_level=Medium\nrollback_time=15 minutes"}),
+        widget=forms.Textarea(
+            attrs={
+                "rows": 6,
+                "style": "resize:none;",
+                "placeholder": "change_request=ITSUP-1234\nmop_author=John Smith\nchange_window=24FEB2026 2200\napproved_by=Jane Doe\nexpected_duration=30 minutes\nimpact_level=Medium\nrollback_time=15 minutes",
+            }
+        ),
     )
